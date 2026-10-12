@@ -18,6 +18,8 @@ app.get("/api/health", (req, res) => {
 // PORT=5000
 // DATABASE_URL=postgresql://postgres.tajilgwjlskncnuakgsw:S9323673405s@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
 // JWT_SECRET=proplead-local-jwt-secret
+// NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+
 
 
 app.use("/api", authRoutes);
