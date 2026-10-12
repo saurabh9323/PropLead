@@ -14,6 +14,12 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+
+// PORT=5000
+// DATABASE_URL=postgresql://postgres.tajilgwjlskncnuakgsw:S9323673405s@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
+// JWT_SECRET=proplead-local-jwt-secret
+
+
 app.use("/api", authRoutes);
 app.use("/api", authenticateToken);
 app.use("/api", leadRoutes);
