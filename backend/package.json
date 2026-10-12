@@ -1,0 +1,20 @@
+{
+  "name": "PropLead CRM Backend",
+  "version": "1.0.0",
+  "description": "Express and PostgreSQL backend starter with layered architecture",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.23.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
