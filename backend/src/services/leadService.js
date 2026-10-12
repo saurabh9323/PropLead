@@ -160,6 +160,7 @@ const cleanNoteText = (noteData) => {
     throw new AppError("Note is required", 400);
   }
 
+  if (note.trim().length > 5000) throw new AppError("Notes must be 5000 characters or fewer", 400);
   return note.trim();
 };
 
@@ -188,7 +189,16 @@ const getLeadNotes = async (leadId) => {
   }
 };
 
+const updateLeadStatus = async (id, data) => {
+  validateLeadId(id);
+  if (!allowedStatuses.includes(data?.status)) throw new AppError("Invalid lead status", 400);
+  const lead = await leadRepository.updateLeadStatus(id, data.status);
+  if (!lead) throw new AppError("Lead not found", 404);
+  return lead;
+};
+
 module.exports = {
+  updateLeadStatus,
   createLead,
   getAllLeads,
   getLeadById,

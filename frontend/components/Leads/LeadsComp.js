@@ -1,4 +1,5 @@
 import { Inbox, Mail, MapPin, Phone, Search } from "lucide-react";
+import Link from "next/link";
 import { isApiConfigured } from "@/api/MainApi";
 import { apiRequest } from "@/utils/apiRequest";
 import { getStatusStyle } from "../Dashboard/statusStyles";
@@ -251,7 +252,7 @@ function LeadsTable({ leads }) {
                   <div className="flex items-center gap-3">
                     <Avatar name={lead.name} />
                     <div className="min-w-0">
-                      <p className="truncate font-semibold text-slate-900">{lead.name}</p>
+                      <Link href={`/leads/${lead.id}`} className="block truncate font-semibold text-emerald-900 underline-offset-4 hover:underline">{lead.name}</Link>
                       <p className="text-xs text-slate-500">{lead.property_type}</p>
                     </div>
                   </div>
@@ -286,7 +287,7 @@ function LeadsTable({ leads }) {
               <Avatar name={lead.name} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <p className="truncate font-semibold text-slate-900">{lead.name}</p>
+                  <Link href={`/leads/${lead.id}`} className="truncate font-semibold text-emerald-900 underline-offset-4 hover:underline">{lead.name}</Link>
                   <StatusBadge status={lead.status} />
                 </div>
                 <p className="text-xs text-slate-500">{lead.property_type}</p>
@@ -334,6 +335,7 @@ export default async function LeadsComp({ searchParams }) {
             Search, filter and sort every lead in your pipeline.
           </p>
         </div>
+        <Link href="/leads/new" className="rounded-lg bg-[#12352f] px-5 py-2.5 text-center font-semibold text-white hover:bg-emerald-900">Add lead</Link>
         {!error ? (
           <p className="w-fit rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
             {leads.length} {leads.length === 1 ? "lead" : "leads"}
@@ -342,6 +344,7 @@ export default async function LeadsComp({ searchParams }) {
       </header>
 
       <StatusTabs filters={filters} />
+      {searchParams?.deleted === "1" && <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-emerald-800">Lead deleted successfully.</p>}
       <FilterForm filters={filters} />
 
       {error ? (

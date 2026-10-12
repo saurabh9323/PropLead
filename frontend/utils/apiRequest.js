@@ -2,7 +2,7 @@ import axios from "axios";
 import { cookies } from "next/headers";
 import { apiurls } from "@/api/MainApi";
 
-const methodsWithBody = ["post", "put", "delete"];
+const methodsWithBody = ["post", "put", "patch", "delete"];
 
 function removeEmptyQueryValues(data) {
   if (!data) return undefined;
@@ -19,8 +19,8 @@ async function getTokenHeader() {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
-export async function apiRequest(key, method, data, headers = {}) {
-  const url = apiurls[key];
+export async function apiRequest(key, method, data, headers = {}, path = "") {
+  const url = apiurls[key] && `${apiurls[key]}${path}`;
 
   if (!url || url.includes("undefined")) {
     throw new Error(`API URL not found for key: ${key}`);
@@ -36,6 +36,7 @@ export async function apiRequest(key, method, data, headers = {}) {
   try {
     const response = await axios({
       method: requestMethod,
+      timeout: 15000,
       url,
       headers: finalHeaders,
       params: requestMethod === "get" ? removeEmptyQueryValues(data) : undefined,
@@ -56,7 +57,7 @@ export async function apiRequest(key, method, data, headers = {}) {
       };
     }
 
-    console.error(`Error in ${requestMethod.toUpperCase()} request to ${url}:`, error);
+    console.error(`API request failed: ${requestMethod.toUpperCase()} ${key}`, error.code);
     throw error;
   }
 }

@@ -281,7 +281,7 @@ function AddView({ roles, rolesError, onCancel }) {
       <form action={createUserAction} className="mt-6">
         {disabled ? (
           <p role="alert" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            {rolesError || "No roles exist yet."} Users can't be created until roles are available.
+            {rolesError || "No roles exist yet."} Users cannot be created until roles are available.
           </p>
         ) : null}
 

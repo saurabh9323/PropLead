@@ -4,6 +4,7 @@ const {
 } = require("../middlewares/authMiddleware");
 const {
   createLead,
+  updateLeadStatus,
   getAllLeads,
   getLeadById,
   updateLead,
@@ -15,6 +16,7 @@ const {
 const router = express.Router();
 
 router.post("/leads", authorizeRoles("admin", "CRM"), createLead);
+router.patch("/leads/:id/status", authorizeRoles("admin", "CRM"), updateLeadStatus);
 router.get("/leads", authorizeRoles("admin", "CRM"), getAllLeads);
 router.post("/leads/:id/notes", authorizeRoles("admin", "CRM"), createLeadNote);
 router.get("/leads/:id/notes", authorizeRoles("admin", "CRM"), getLeadNotes);

@@ -29,6 +29,7 @@ export async function loginAction(formData) {
   const cookieStore = await cookies();
   cookieStore.set("proplead_token", loginResult.token, {
     httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     maxAge: loginResult.expiresIn,
     path: "/",

@@ -32,6 +32,9 @@ const normalizeBudget = (budget) => {
     throw new AppError("Budget is required", 400);
   }
 
+  if (!["string", "number"].includes(typeof budget) || (typeof budget === "string" && !budget.trim())) {
+    throw new AppError("Budget must be a valid number", 400);
+  }
   const numericBudget = Number(budget);
 
   if (!Number.isFinite(numericBudget)) {
@@ -42,6 +45,7 @@ const normalizeBudget = (budget) => {
     throw new AppError("Budget cannot be negative", 400);
   }
 
+  if (numericBudget > 9999999999.99) throw new AppError("Budget exceeds the supported maximum", 400);
   return numericBudget;
 };
 
@@ -74,7 +78,7 @@ class Lead {
     status = "New",
     createdAt = new Date(),
     updatedAt = new Date(),
-  }) {
+  } = {}) {
     this.id = id;
     this.name = requireString(name, "Name is required");
     this.phone = requireString(phone, "Phone is required");

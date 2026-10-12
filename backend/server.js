@@ -6,19 +6,17 @@ const userRoutes = require("./src/routes/userRoutes");
 const { authenticateToken } = require("./src/middlewares/authMiddleware");
 const pool = require("./src/db/db");
 
+if (!process.env.JWT_SECRET) throw new Error("Set JWT_SECRET in backend/.env before starting the server");
+
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "100kb" }));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
 
-// PORT=5000
-// DATABASE_URL=postgresql://postgres.tajilgwjlskncnuakgsw:S9323673405s@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres
-// JWT_SECRET=proplead-local-jwt-secret
-// NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
 
 
 

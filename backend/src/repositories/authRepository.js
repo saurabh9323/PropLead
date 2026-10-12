@@ -36,6 +36,7 @@ const getUserById = async (userId) => {
 };
 
 module.exports = {
+  updatePasswordHash: (id, hash) => pool.query("UPDATE users SET password_hash = $2 WHERE id = $1", [id, hash]),
   getUserByEmail,
   getUserById,
 };

@@ -92,7 +92,15 @@ const getLeadNotes = async (req, res) => {
   }
 };
 
+const updateLeadStatus = async (req, res) => {
+  try {
+    const lead = await leadService.updateLeadStatus(req.params.id, req.body);
+    res.json({ message: "Lead status updated", data: lead });
+  } catch (error) { handleControllerError(res, error); }
+};
+
 module.exports = {
+  updateLeadStatus,
   createLead,
   getAllLeads,
   getLeadById,

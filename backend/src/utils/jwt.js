@@ -7,7 +7,11 @@ const base64UrlEncode = (value) =>
 const base64UrlDecode = (value) =>
   JSON.parse(Buffer.from(value, "base64url").toString("utf8"));
 
-const getJwtSecret = () => process.env.JWT_SECRET || "proplead-dev-secret";
+const getJwtSecret = () => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error("JWT_SECRET must be configured");
+  return secret;
+};
 
 const signToken = (payload, expiresInSeconds = 60 * 60) => {
   const header = {
@@ -43,14 +47,21 @@ const verifyToken = (token) => {
     .update(`${encodedHeader}.${encodedPayload}`)
     .digest("base64url");
 
-  if (signature !== expectedSignature) {
+  const actual = Buffer.from(signature);
+  const expected = Buffer.from(expectedSignature);
+  if (actual.length !== expected.length || !crypto.timingSafeEqual(actual, expected)) {
     throw new AppError("Invalid token", 401);
   }
 
-  const payload = base64UrlDecode(encodedPayload);
+  let payload;
+  try {
+    const header = base64UrlDecode(encodedHeader);
+    if (header.alg !== "HS256" || header.typ !== "JWT") throw new Error();
+    payload = base64UrlDecode(encodedPayload);
+  } catch { throw new AppError("Invalid token", 401); }
   const now = Math.floor(Date.now() / 1000);
 
-  if (!payload.exp || payload.exp < now) {
+  if (!payload || !Number.isFinite(payload.exp) || payload.exp <= now) {
     throw new AppError("Token expired", 401);
   }
 

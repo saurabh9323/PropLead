@@ -59,27 +59,6 @@ INSERT INTO roles (name)
 VALUES ('admin'), ('CRM')
 ON CONFLICT (name) DO NOTHING;
 
-INSERT INTO users (name, email, password_hash, role_id)
-VALUES
-  (
-    'Admin User',
-    'admin@proplead.test',
-    'e86f78a8a3caf0b60d8e74e5942aa6d86dc150cd3c03338aef25b7d2d7e3acc7',
-    (SELECT id FROM roles WHERE name = 'admin')
-  ),
-  (
-    'CRM User',
-    'crm@proplead.test',
-    'c8c3ea0b19ba8e6496a35de1de30d238d65fcc53fc28bd3e5b3fea52be3ebd30',
-    (SELECT id FROM roles WHERE name = 'CRM')
-  )
-ON CONFLICT (email) DO UPDATE
-SET
-  name = EXCLUDED.name,
-  password_hash = EXCLUDED.password_hash,
-  role_id = EXCLUDED.role_id,
-  updated_at = NOW();
-
 CREATE OR REPLACE FUNCTION get_all_leads(
   p_search TEXT DEFAULT NULL,
   p_source TEXT DEFAULT NULL,

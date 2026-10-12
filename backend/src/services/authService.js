@@ -1,7 +1,7 @@
 const authRepository = require("../repositories/authRepository");
 const AppError = require("../utils/appError");
 const { signToken } = require("../utils/jwt");
-const { hashPassword } = require("../utils/password");
+const { hashPassword, verifyPassword } = require("../utils/password");
 
 const tokenExpirySeconds = 60 * 60;
 
@@ -16,8 +16,12 @@ const login = async ({ email, password }) => {
 
   const user = await authRepository.getUserByEmail(email.trim());
 
-  if (!user || user.password_hash !== hashPassword(password)) {
+  if (!user || !(await verifyPassword(password, user.password_hash))) {
     throw new AppError("Invalid email or password", 401);
+  }
+
+  if (!user.password_hash.startsWith("scrypt$")) {
+    await authRepository.updatePasswordHash(user.id, await hashPassword(password));
   }
 
   const token = signToken(

@@ -126,7 +126,13 @@ const getLeadNotes = async (leadId) => {
   return result.rows;
 };
 
+const updateLeadStatus = async (id, status) => {
+  const result = await pool.query("UPDATE leads SET status = $2, updated_at = NOW() WHERE id = $1 RETURNING *", [id, status]);
+  return result.rows[0];
+};
+
 module.exports = {
+  updateLeadStatus,
   createLead,
   getAllLeads,
   getLeadById,

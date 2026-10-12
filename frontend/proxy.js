@@ -8,13 +8,9 @@ export function proxy(request) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (token && isLoginPage) {
-    return NextResponse.redirect(new URL("/", request.url));
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/leads", "/users", "/login"],
+  matcher: ["/", "/leads/:path*", "/users/:path*", "/login"],
 };

@@ -1,13 +1,9 @@
 "use client";
 
-import { Check, Eye, EyeOff, Loader2, Lock, Mail, TriangleAlert, X } from "lucide-react";
+import { Eye, EyeOff, Loader2, Lock, Mail, TriangleAlert, X } from "lucide-react";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
-const demoAccounts = [
-  { id: "admin", label: "Admin", email: "admin@proplead.test", password: "Admin@123" },
-  { id: "crm", label: "CRM user", email: "crm@proplead.test", password: "Crm@123" },
-];
 
 const fieldClass =
   "group flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-slate-300 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100";
@@ -43,11 +39,7 @@ export default function LoginForm({ action, initialError }) {
   const [error, setError] = useState(initialError || "");
   const [showHelp, setShowHelp] = useState(false);
 
-  const fillDemo = (account) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setError("");
-  };
+
 
   return (
     <>
@@ -132,36 +124,6 @@ export default function LoginForm({ action, initialError }) {
 
         <SubmitButton />
       </form>
-
-      <div className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4 lg:mt-5">
-        <p className="text-sm font-semibold text-slate-900">Try a demo account</p>
-        <p className="mt-1 text-xs text-slate-500">Pick one to fill in the form, then sign in.</p>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {demoAccounts.map((account) => {
-            const active = email === account.email && password === account.password;
-
-            return (
-              <button
-                aria-pressed={active}
-                className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-left text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600 ${
-                  active
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-white"
-                }`}
-                key={account.id}
-                onClick={() => fillDemo(account)}
-                type="button"
-              >
-                <span className="min-w-0">
-                  <span className="block font-semibold">{account.label}</span>
-                  <span className="block truncate text-xs text-slate-500">{account.email}</span>
-                </span>
-                {active ? <Check className="shrink-0 text-emerald-700" size={16} /> : null}
-              </button>
-            );
-          })}
-        </div>
-      </div>
 
       <div className="mt-6 text-center text-sm text-slate-500 lg:mt-4">
         <button

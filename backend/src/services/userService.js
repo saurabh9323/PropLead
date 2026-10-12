@@ -31,7 +31,8 @@ const getAllRoles = async () => userRepository.getAllRoles();
 const createUser = async ({ name, email, password, roleId }) => {
   const cleanName = validateRequiredText(name, "Name");
   const cleanEmail = validateRequiredText(email, "Email").toLowerCase();
-  const cleanPassword = validateRequiredText(password, "Password");
+  validateRequiredText(password, "Password");
+  const cleanPassword = password;
   const cleanRoleId = validateUuid(roleId, "role ID");
 
   if (!emailPattern.test(cleanEmail)) {
@@ -57,7 +58,7 @@ const createUser = async ({ name, email, password, roleId }) => {
   const createdUser = await userRepository.createUser({
     name: cleanName,
     email: cleanEmail,
-    passwordHash: hashPassword(cleanPassword),
+    passwordHash: await hashPassword(cleanPassword),
     roleId: cleanRoleId,
   });
 

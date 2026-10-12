@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "test": "node --test",
+    "create-admin": "node scripts/create-admin.js"
   },
   "license": "ISC",
   "dependencies": {
@@ -15,6 +17,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.9",
     "nodemon": "^3.1.14"
   }
 }

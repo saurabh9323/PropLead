@@ -13,6 +13,7 @@ import { isApiConfigured } from "@/api/MainApi";
 import { apiRequest } from "@/utils/apiRequest";
 import DashboardCharts from "./DashboardCharts";
 import SyncButton from "./SyncButton";
+import Link from "next/link";
 import { getStatusStyle } from "./statusStyles";
 
 async function getDashboardData() {
@@ -221,7 +222,7 @@ function LeadPortfolioTable({ leads }) {
                 {recentLeads.map((lead) => (
                   <tr className="hover:bg-emerald-50/40" key={lead.id}>
                     <td className="px-5 py-4">
-                      <p className="font-bold text-slate-950">{lead.name}</p>
+                      <Link href={`/leads/${lead.id}`} className="font-bold text-emerald-900 hover:underline">{lead.name}</Link>
                       <p className="text-xs text-slate-500">{lead.phone}</p>
                     </td>
                     <td className="px-5 py-4">
@@ -247,7 +248,7 @@ function LeadPortfolioTable({ leads }) {
               <li className="p-4" key={lead.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-bold text-slate-950">{lead.name}</p>
+                    <Link href={`/leads/${lead.id}`} className="block truncate font-bold text-emerald-900 hover:underline">{lead.name}</Link>
                     <p className="text-xs text-slate-500">{lead.phone}</p>
                   </div>
                   <StatusBadge status={lead.status} />
@@ -382,8 +383,9 @@ export default async function DashboardComp() {
             <section className="mt-6 rounded-xl border border-dashed border-slate-300 bg-white p-6 text-slate-600">
               <h2 className="font-semibold text-slate-950">No leads yet</h2>
               <p className="mt-2 text-sm">
-                Add your first lead through the backend API and your metrics will show up here.
+                Add your first lead and your metrics will show up here.
               </p>
+              <Link href="/leads/new" className="mt-4 inline-block rounded-lg bg-[#12352f] px-4 py-2 font-semibold text-white">Add lead</Link>
             </section>
           ) : (
             <>
