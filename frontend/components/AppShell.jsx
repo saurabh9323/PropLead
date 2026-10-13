@@ -166,7 +166,9 @@ export default function AppShell({ user, children }) {
       <section className="min-w-0 flex-1 lg:min-h-screen lg:pl-80">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5 lg:mx-6 lg:mt-4 lg:rounded-md lg:border lg:py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
             
+            </div>
 
             <div className="flex items-center justify-between gap-3 md:justify-end">
               <div className="truncate rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 sm:text-sm">
