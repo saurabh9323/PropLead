@@ -28,7 +28,7 @@ A real-estate lead management app built with Next.js/React, Tailwind, Express an
 4. Fill `backend/.env` with your own `DATABASE_URL` and a long random `JWT_SECRET`. Do not commit real `.env` files.
 5. Keep `frontend/.env.local` pointed at the Express API, normally:
    ```env
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000
    ```
 6. Install the database schema, indexes, roles and stored functions:
    ```bash
@@ -71,8 +71,10 @@ Frontend variables:
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `API_BASE_URL` | Recommended in production | Server-only Express API base URL used by the Next.js API proxy and server components |
-| `NEXT_PUBLIC_API_BASE_URL` | Yes locally, optional when `API_BASE_URL` is set | Public fallback Express API base URL for server-side Next.js calls |
+| `API_BASE_URL` | Recommended in production | Server-only Express backend URL used by the Next.js API proxy and server components |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes locally, optional when `API_BASE_URL` is set | Public fallback Express backend URL for server-side Next.js calls |
+
+The frontend accepts either the backend root URL or the `/api` URL. For example, both `https://proplead-hhrg.onrender.com` and `https://proplead-hhrg.onrender.com/api` resolve to the same API base internally.
 
 ## REST API
 
@@ -148,8 +150,8 @@ Frontend on Vercel:
 - Root directory: `frontend`
 - Build command: `npm run build`
 - Output: managed by Next.js
-- Required environment variable: `API_BASE_URL=https://your-render-service.onrender.com/api`
-- Optional fallback: `NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com/api`
+- Required environment variable: `API_BASE_URL=https://your-render-service.onrender.com`
+- Optional fallback: `NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com`
 
 After deployment, run `npm run db:setup --prefix backend` locally against the production database or execute `backend/sql/schema.sql` and `backend/sql/functions.sql` in Supabase before using the deployed API.
 

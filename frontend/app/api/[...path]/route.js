@@ -6,29 +6,45 @@ const errorResponse = (statusCode, message) => NextResponse.json(
   { ok: false, statusCode, message, data: null, pagination: null },
   { status: statusCode },
 );
-const readableRoutes = new Set(["health", "auth/me", "dashboard", "roles", "users", "leads"]);
-const postableRoutes = new Set(["auth/login", "auth/logout", "users", "leads", "leads/list"]);
-const puttable = /^leads\/[^/]+$/;
-const deletable = /^leads\/[^/]+$/;
-const userDetail = /^users\/[^/]+$/;
-const leadDetail = /^leads\/[^/]+$/;
-const leadNotes = /^leads\/[^/]+\/notes$/;
-const leadActions = /^leads\/[^/]+\/(update|delete|status|notes)$/;
 
-function isAllowedMethod(method, endpoint) {
-  if (method === "GET") return readableRoutes.has(endpoint) || userDetail.test(endpoint) || leadDetail.test(endpoint) || leadNotes.test(endpoint);
-  if (method === "POST") return postableRoutes.has(endpoint) || leadActions.test(endpoint);
-  if (method === "PUT") return puttable.test(endpoint);
-  if (method === "DELETE") return deletable.test(endpoint);
-  return false;
+function getProxyTarget(method, parts) {
+  const [group, id, child] = parts;
+
+  if (group === "health" && parts.length === 1 && method === "GET") return { key: "Health", suffix: "" };
+
+  if (group === "auth") {
+    if (id === "login" && method === "POST") return { key: "Login", suffix: "" };
+    if (id === "logout" && method === "POST") return { key: "Logout", suffix: "" };
+    if (id === "me" && method === "GET") return { key: "CurrentUser", suffix: "" };
+  }
+
+  if (group === "dashboard" && parts.length === 1 && method === "GET") return { key: "Dashboard", suffix: "" };
+  if (group === "roles" && parts.length === 1 && method === "GET") return { key: "Roles", suffix: "" };
+
+  if (group === "users") {
+    if (parts.length === 1 && ["GET", "POST"].includes(method)) return { key: "Users", suffix: "" };
+    if (parts.length === 2 && method === "GET") return { key: "Users", suffix: `/${id}` };
+  }
+
+  if (group === "leads") {
+    if (parts.length === 1 && ["GET", "POST"].includes(method)) return { key: "Leads", suffix: "" };
+    if (id === "list" && parts.length === 2 && method === "POST") return { key: "Leads", suffix: "/list" };
+    if (parts.length === 2 && ["GET", "PUT", "DELETE"].includes(method)) return { key: "Leads", suffix: `/${id}` };
+    if (parts.length === 3 && child === "notes" && ["GET", "POST"].includes(method)) return { key: "Leads", suffix: `/${id}/notes` };
+    if (parts.length === 3 && ["update", "delete", "status"].includes(child) && method === "POST") return { key: "Leads", suffix: `/${id}/${child}` };
+  }
+
+  return null;
 }
 
 async function forward(request, context) {
   const { path } = await context.params;
-  const endpoint = path.join("/").replace(/^\/+|\/+$/g, "");
+  const parts = path.map((part) => part.trim()).filter(Boolean);
+  const endpoint = parts.join("/");
   const method = request.method;
   const hasBody = ["POST", "PUT"].includes(method);
-  if (!isAllowedMethod(method, endpoint)) return errorResponse(404, "Endpoint not found");
+  const target = getProxyTarget(method, parts);
+  if (!target) return errorResponse(404, "Endpoint not found");
   // Same-origin cookie transport must not accept cross-site mutations.
   if (method !== "GET" && request.headers.get("origin") && request.headers.get("origin") !== request.nextUrl.origin) {
     return errorResponse(403, "Cross-origin request denied");
@@ -42,10 +58,7 @@ async function forward(request, context) {
     if (!body || Array.isArray(body) || typeof body !== "object") return errorResponse(400, "Send a JSON object body");
   }
   try {
-    const resource = path[0] === "auth" ? endpoint : path[0];
-    const key = { health: "Health", "auth/login": "Login", "auth/logout": "Logout", "auth/me": "CurrentUser", dashboard: "Dashboard", roles: "Roles", users: "Users", leads: "Leads" }[resource];
-    const suffix = path[0] === "auth" ? "" : path.length > 1 ? `/${path.slice(1).join("/")}` : "";
-    const result = await apiRequest(key, method, hasBody ? body : undefined, token ? { Authorization: `Bearer ${token}` } : {}, `${suffix}${method === "GET" ? request.nextUrl.search : ""}`);
+    const result = await apiRequest(target.key, method, hasBody ? body : undefined, token ? { Authorization: `Bearer ${token}` } : {}, `${target.suffix}${method === "GET" ? request.nextUrl.search : ""}`);
     if (endpoint === "auth/login" && result.ok) {
       cookieStore.set("proplead_token", result.data.token, {
         httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: result.data.expiresIn,

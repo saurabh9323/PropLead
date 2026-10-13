@@ -1,4 +1,11 @@
-const API_BASE_URL = process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL;
+function normalizeApiBaseUrl(url) {
+  if (!url) return "";
+
+  const trimmedUrl = url.replace(/\/+$/, "");
+  return trimmedUrl.endsWith("/api") ? trimmedUrl : `${trimmedUrl}/api`;
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL);
 
 export const apiurls = {
   Health: `${API_BASE_URL}/health`,
