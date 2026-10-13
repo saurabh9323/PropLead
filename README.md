@@ -71,7 +71,8 @@ Frontend variables:
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `NEXT_PUBLIC_API_BASE_URL` | Yes | Base URL for server-side Next.js calls to the Express API |
+| `API_BASE_URL` | Recommended in production | Server-only Express API base URL used by the Next.js API proxy and server components |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes locally, optional when `API_BASE_URL` is set | Public fallback Express API base URL for server-side Next.js calls |
 
 ## REST API
 
@@ -147,7 +148,8 @@ Frontend on Vercel:
 - Root directory: `frontend`
 - Build command: `npm run build`
 - Output: managed by Next.js
-- Required environment variable: `NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com/api`
+- Required environment variable: `API_BASE_URL=https://your-render-service.onrender.com/api`
+- Optional fallback: `NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com/api`
 
 After deployment, run `npm run db:setup --prefix backend` locally against the production database or execute `backend/sql/schema.sql` and `backend/sql/functions.sql` in Supabase before using the deployed API.
 
