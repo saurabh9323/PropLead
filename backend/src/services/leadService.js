@@ -1,6 +1,7 @@
 const Lead = require("../models/Lead");
 const leadRepository = require("../repositories/leadRepository");
 const AppError = require("../utils/appError");
+const pagination = require("../utils/pagination");
 
 const allowedStatuses = ["New", "Contacted", "Site Visit", "Closed"];
 const allowedSortFields = ["created_at", "budget"];
@@ -60,6 +61,7 @@ const validateLeadQueryParams = (queryParams) => {
   }
 
   return {
+    ...pagination(queryParams),
     search,
     source,
     status,

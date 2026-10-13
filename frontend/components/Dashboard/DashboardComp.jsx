@@ -1,3 +1,4 @@
+import { getAuthHeaders } from "@/lib/auth";
 import {
   Building2,
   CalendarDays,
@@ -14,9 +15,11 @@ import { apiRequest } from "@/utils/apiRequest";
 import DashboardCharts from "./DashboardCharts";
 import SyncButton from "./SyncButton";
 import Link from "next/link";
+import Pagination from "@/components/Pagination";
+import { getPagination } from "@/lib/pagination";
 import { getStatusStyle } from "./statusStyles";
 
-async function getDashboardData() {
+async function getDashboardData(paging) {
   if (!isApiConfigured) {
     return {
       dashboard: null,
@@ -26,13 +29,7 @@ async function getDashboardData() {
   }
 
   try {
-    const [dashboardResult, leadsResult] = await Promise.all([
-      apiRequest("Dashboard", "get"),
-      apiRequest("Leads", "get", {
-        sortBy: "created_at",
-        sortOrder: "desc",
-      }),
-    ]);
+    const dashboardResult = await apiRequest("Dashboard", "get", paging, await getAuthHeaders());
 
     if (!dashboardResult.ok) {
       return {
@@ -44,7 +41,8 @@ async function getDashboardData() {
 
     return {
       dashboard: dashboardResult.data,
-      leads: leadsResult.ok ? leadsResult.data || [] : [],
+      pagination: dashboardResult.pagination,
+      leads: dashboardResult.data.recentLeads || [],
       error: null,
     };
   } catch (error) {
@@ -88,10 +86,14 @@ function StatCard({ label, value, helper, icon: Icon, tone = "slate" }) {
 
   return (
     <section className="min-w-0 rounded-xl border border-emerald-100 bg-white p-4 sm:p-5">
-      <div className={`grid h-10 w-10 place-items-center rounded-lg ${tones[tone]}`}>
+      <div
+        className={`grid h-10 w-10 place-items-center rounded-lg ${tones[tone]}`}
+      >
         <Icon size={20} />
       </div>
-      <p className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">{value}</p>
+      <p className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+        {value}
+      </p>
       <p className="mt-1 text-sm font-semibold text-slate-800">{label}</p>
       <p className="mt-0.5 text-xs text-slate-500">{helper}</p>
     </section>
@@ -106,7 +108,10 @@ function MiniMetric({ label, value, fullValue, helper, icon: Icon }) {
       </div>
       <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-600">{label}</p>
-        <p className="truncate text-xl font-black text-slate-950 sm:text-2xl" title={fullValue || String(value)}>
+        <p
+          className="truncate text-xl font-black text-slate-950 sm:text-2xl"
+          title={fullValue || String(value)}
+        >
           {value}
         </p>
         <p className="truncate text-xs text-slate-500">{helper}</p>
@@ -116,16 +121,26 @@ function MiniMetric({ label, value, fullValue, helper, icon: Icon }) {
 }
 
 // The one bold moment: conversion on the left, live pipeline funnel on the right.
-function PipelineHero({ closedLeads, totalLeads, conversionRate, statusDistribution }) {
+function PipelineHero({
+  closedLeads,
+  totalLeads,
+  conversionRate,
+  statusDistribution,
+}) {
   const remainingLeads = Math.max(totalLeads - closedLeads, 0);
   const progressWidth = Math.min(Number(conversionRate || 0), 100);
-  const maxCount = Math.max(...statusDistribution.map((item) => Number(item.count)), 1);
+  const maxCount = Math.max(
+    ...statusDistribution.map((item) => Number(item.count)),
+    1,
+  );
 
   return (
     <section className="mt-6 overflow-hidden rounded-2xl bg-[#12352f] text-white">
       <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1fr_1.2fr] lg:gap-12">
         <div className="min-w-0">
-          <p className="text-sm font-medium text-emerald-200">Conversion rate</p>
+          <p className="text-sm font-medium text-emerald-200">
+            Conversion rate
+          </p>
           <p className="mt-2 text-5xl font-black tracking-tight sm:text-6xl">
             {formatPercent(conversionRate)}
           </p>
@@ -140,14 +155,20 @@ function PipelineHero({ closedLeads, totalLeads, conversionRate, statusDistribut
             />
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm">
-            <span className="font-semibold text-emerald-300">{closedLeads} closed</span>
-            <span className="font-semibold text-amber-300">{remainingLeads} still open</span>
+            <span className="font-semibold text-emerald-300">
+              {closedLeads} closed
+            </span>
+            <span className="font-semibold text-amber-300">
+              {remainingLeads} still open
+            </span>
           </div>
         </div>
 
         <div className="min-w-0">
           <h3 className="text-base font-bold">Pipeline health</h3>
-          <p className="mt-1 text-sm text-emerald-100/70">Leads at each stage right now</p>
+          <p className="mt-1 text-sm text-emerald-100/70">
+            Leads at each stage right now
+          </p>
           <ul className="mt-5 space-y-4">
             {statusDistribution.map((item) => {
               const count = Number(item.count);
@@ -156,13 +177,18 @@ function PipelineHero({ closedLeads, totalLeads, conversionRate, statusDistribut
               return (
                 <li key={item.status}>
                   <div className="mb-1.5 flex items-center justify-between text-sm">
-                    <span className="font-medium text-emerald-50">{item.status}</span>
+                    <span className="font-medium text-emerald-50">
+                      {item.status}
+                    </span>
                     <span className="font-black">{count}</span>
                   </div>
                   <div className="h-2.5 overflow-hidden rounded-full bg-white/10">
                     <div
                       className="h-full rounded-full"
-                      style={{ width: `${width}%`, backgroundColor: getStatusStyle(item.status).hex }}
+                      style={{
+                        width: `${width}%`,
+                        backgroundColor: getStatusStyle(item.status).hex,
+                      }}
                     />
                   </div>
                 </li>
@@ -185,24 +211,28 @@ function StatusBadge({ status }) {
   );
 }
 
-function LeadPortfolioTable({ leads }) {
-  const recentLeads = leads.slice(0, 6);
+function LeadPortfolioTable({ leads, pagination }) {
+  const recentLeads = leads;
 
   return (
     <section className="mt-6 min-w-0 rounded-xl border border-emerald-100 bg-white">
       <div className="flex flex-col gap-2 border-b border-emerald-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <h3 className="text-base font-bold text-slate-950 sm:text-lg">Latest enquiries</h3>
-          <p className="text-sm text-slate-500">Newest property leads in your pipeline</p>
+          <h3 className="text-base font-bold text-slate-950 sm:text-lg">
+            Latest enquiries
+          </h3>
+          <p className="text-sm text-slate-500">
+            Newest property leads in your pipeline
+          </p>
         </div>
         <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-800">
-          {leads.length} {leads.length === 1 ? "lead" : "leads"} total
+          {pagination.total} {pagination.total === 1 ? "lead" : "leads"} total
         </span>
       </div>
 
       {recentLeads.length === 0 ? (
         <p className="p-5 text-sm text-slate-500">
-          Lead records could not be loaded. Counts above come from the dashboard summary.
+          No lead records on this page.
         </p>
       ) : (
         <>
@@ -222,11 +252,18 @@ function LeadPortfolioTable({ leads }) {
                 {recentLeads.map((lead) => (
                   <tr className="hover:bg-emerald-50/40" key={lead.id}>
                     <td className="px-5 py-4">
-                      <Link href={`/leads/${lead.id}`} className="font-bold text-emerald-900 hover:underline">{lead.name}</Link>
+                      <Link
+                        href={`/leads/${lead.id}`}
+                        className="font-bold text-emerald-900 hover:underline"
+                      >
+                        {lead.name}
+                      </Link>
                       <p className="text-xs text-slate-500">{lead.phone}</p>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="font-semibold text-slate-800">{lead.property_type}</p>
+                      <p className="font-semibold text-slate-800">
+                        {lead.property_type}
+                      </p>
                       <p className="text-xs text-slate-500">{lead.location}</p>
                     </td>
                     <td className="whitespace-nowrap px-5 py-4 font-bold text-slate-950">
@@ -248,7 +285,12 @@ function LeadPortfolioTable({ leads }) {
               <li className="p-4" key={lead.id}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <Link href={`/leads/${lead.id}`} className="block truncate font-bold text-emerald-900 hover:underline">{lead.name}</Link>
+                    <Link
+                      href={`/leads/${lead.id}`}
+                      className="block truncate font-bold text-emerald-900 hover:underline"
+                    >
+                      {lead.name}
+                    </Link>
                     <p className="text-xs text-slate-500">{lead.phone}</p>
                   </div>
                   <StatusBadge status={lead.status} />
@@ -256,7 +298,9 @@ function LeadPortfolioTable({ leads }) {
                 <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                   <div className="min-w-0">
                     <dt className="text-xs text-slate-500">Property</dt>
-                    <dd className="truncate font-semibold text-slate-800">{lead.property_type}</dd>
+                    <dd className="truncate font-semibold text-slate-800">
+                      {lead.property_type}
+                    </dd>
                   </div>
                   <div className="min-w-0">
                     <dt className="text-xs text-slate-500">Location</dt>
@@ -278,12 +322,15 @@ function LeadPortfolioTable({ leads }) {
           </ul>
         </>
       )}
+      <Pagination pagination={pagination} />
     </section>
   );
 }
 
-export default async function DashboardComp() {
-  const { dashboard, leads, error } = await getDashboardData();
+export default async function DashboardComp({ searchParams = {} }) {
+  const { dashboard, leads, pagination, error } = await getDashboardData(
+    getPagination(searchParams),
+  );
   const totalLeads = dashboard?.totalLeads || 0;
   const leadsBySource = dashboard?.leadsBySource || [];
   const statusDistribution = dashboard?.statusDistribution || [];
@@ -291,21 +338,23 @@ export default async function DashboardComp() {
   const contactedLeads = getStatusCount(statusDistribution, "Contacted");
   const siteVisitLeads = getStatusCount(statusDistribution, "Site Visit");
   const newLeads = getStatusCount(statusDistribution, "New");
-  const totalBudget = leads.reduce((sum, lead) => sum + Number(lead.budget || 0), 0);
-  // Average over the leads the budget total was actually summed from.
-  const averageBudget = leads.length > 0 ? totalBudget / leads.length : 0;
+  const totalBudget = Number(dashboard?.totalBudget || 0);
+  const averageBudget = Number(dashboard?.averageBudget || 0);
   const topSource = leadsBySource[0]?.source || "No source";
 
   return (
     <div className="mx-auto w-full max-w-[1600px]">
       <header className="flex flex-col gap-4 border-b border-emerald-100 pb-5 sm:pb-6 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-emerald-800">Live CRM snapshot</p>
+          <p className="text-sm font-semibold text-emerald-800">
+            Live CRM snapshot
+          </p>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
             PropLead control room
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
-            Track lead quality, site visits, budget pipeline and closures in one workspace.
+            Track lead quality, site visits, budget pipeline and closures in one
+            workspace.
           </p>
         </div>
         <SyncButton />
@@ -330,9 +379,20 @@ export default async function DashboardComp() {
 
           <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-5">
             <div className="col-span-2 md:col-span-1">
-              <StatCard helper="All saved leads" icon={Users} label="Total leads" value={totalLeads} />
+              <StatCard
+                helper="All saved leads"
+                icon={Users}
+                label="Total leads"
+                value={totalLeads}
+              />
             </div>
-            <StatCard helper="Fresh entries" icon={Clock3} label="New" tone="blue" value={newLeads} />
+            <StatCard
+              helper="Fresh entries"
+              icon={Clock3}
+              label="New"
+              tone="blue"
+              value={newLeads}
+            />
             <StatCard
               helper="In follow-up"
               icon={CalendarDays}
@@ -347,13 +407,19 @@ export default async function DashboardComp() {
               tone="violet"
               value={siteVisitLeads}
             />
-            <StatCard helper="Deals won" icon={CheckCircle2} label="Closed" tone="green" value={closedLeads} />
+            <StatCard
+              helper="Deals won"
+              icon={CheckCircle2}
+              label="Closed"
+              tone="green"
+              value={closedLeads}
+            />
           </section>
 
           <section className="mt-4 grid gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
             <MiniMetric
               fullValue={currencyFormatter.format(totalBudget)}
-              helper="Across loaded leads"
+              helper="Across all leads"
               icon={IndianRupee}
               label="Total budget"
               value={compactCurrencyFormatter.format(totalBudget)}
@@ -385,7 +451,12 @@ export default async function DashboardComp() {
               <p className="mt-2 text-sm">
                 Add your first lead and your metrics will show up here.
               </p>
-              <Link href="/leads/new" className="mt-4 inline-block rounded-lg bg-[#12352f] px-4 py-2 font-semibold text-white">Add lead</Link>
+              <Link
+                href="/leads/new"
+                className="mt-4 inline-block rounded-lg bg-[#12352f] px-4 py-2 font-semibold text-white"
+              >
+                Add lead
+              </Link>
             </section>
           ) : (
             <>
@@ -393,7 +464,10 @@ export default async function DashboardComp() {
                 leadsBySource={leadsBySource}
                 statusDistribution={statusDistribution}
               />
-              <LeadPortfolioTable leads={leads} />
+              <LeadPortfolioTable
+                leads={leads}
+                pagination={pagination}
+              />
             </>
           )}
         </>

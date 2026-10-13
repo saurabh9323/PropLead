@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { apiRequest } from "@/utils/apiRequest";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getAuthHeaders } from "@/lib/auth";
 
 export async function loadLead(id) {
   const user = await requireUser();
@@ -12,7 +12,7 @@ export async function loadLead(id) {
     notFound();
   let result;
   try {
-    result = await apiRequest("Leads", "get", undefined, {}, `/${id}`);
+    result = await apiRequest("Leads", "get", undefined, await getAuthHeaders(), `/${id}`);
   } catch {
     return { error: "Unable to reach the backend. Please try again." };
   }

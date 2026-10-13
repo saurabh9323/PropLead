@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { createUserAction } from "@/actions/userActions";
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/apiRequest";
 
 const PAGE_SIZE = 10;
 
@@ -11,7 +12,7 @@ function formatDate(value) {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short" }).format(date);
+  return new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(date);
 }
 
 function isActive(user) {
@@ -260,7 +261,21 @@ function ListView({ users, error, onNew }) {
 /* ---------- add view ---------- */
 
 function AddView({ roles, rolesError, onCancel }) {
-  const disabled = roles.length === 0;
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState("");
+  const disabled = roles.length === 0 || pending;
+  async function submit(event) {
+    event.preventDefault();
+    if (pending) return;
+    const fields = event.currentTarget.elements;
+    const body = Object.fromEntries(["name", "email", "password", "roleId"].map(name => [name, fields.namedItem(name).value]));
+    setPending(true);
+    const result = await apiRequest("Users", "post", body);
+    if (result.ok) { onCancel(); router.refresh(); }
+    else setError(result.message);
+    setPending(false);
+  }
 
   return (
     <>
@@ -278,8 +293,9 @@ function AddView({ roles, rolesError, onCancel }) {
         The user signs in with this email and password and gets the access of the role you pick.
       </p>
 
-      <form action={createUserAction} className="mt-6">
-        {disabled ? (
+      <form onSubmit={submit} className="mt-6">
+        {error && <p role="alert" className="mb-4 text-rose-700">{error}</p>}
+        {roles.length === 0 ? (
           <p role="alert" className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
             {rolesError || "No roles exist yet."} Users cannot be created until roles are available.
           </p>

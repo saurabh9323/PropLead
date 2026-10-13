@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LeadForm from "@/components/Leads/LeadForm";
 import { loadLead } from "@/lib/leads";
+import { NoteForm } from "@/components/Leads/LeadControls";
 
 export default async function EditLeadPage({ params }) {
   const { id } = await params;
@@ -13,7 +14,7 @@ export default async function EditLeadPage({ params }) {
       >
         ← Back to lead
       </Link>
-      <h1 className="mt-4 text-3xl font-bold">Edit lead</h1>
+      <h1 className="mt-4 text-3xl font-bold">Update lead</h1>
       {error ? (
         <p
           role="alert"
@@ -22,7 +23,13 @@ export default async function EditLeadPage({ params }) {
           {error}
         </p>
       ) : (
-        <LeadForm lead={lead} />
+        <>
+          <LeadForm lead={lead} />
+          <section className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+            <h2 className="mb-4 text-xl font-semibold">Notes & comments</h2>
+            <NoteForm id={id} />
+          </section>
+        </>
       )}
     </div>
   );

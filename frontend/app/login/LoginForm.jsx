@@ -1,17 +1,30 @@
 "use client";
 
-import { Eye, EyeOff, Loader2, Lock, Mail, TriangleAlert, X } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Mail,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import { useState } from "react";
-import { useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/apiRequest";
 
+const demoAccounts = [
+  { label: "Admin", email: "admin@proplead.test", password: "Admin@123" },
+  { label: "CRM user", email: "crm@proplead.test", password: "Crm@123" },
+];
 
 const fieldClass =
   "group flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 transition-colors hover:border-slate-300 focus-within:border-emerald-600 focus-within:ring-2 focus-within:ring-emerald-100";
 
-const iconClass = "shrink-0 text-slate-400 transition-colors group-focus-within:text-emerald-700";
+const iconClass =
+  "shrink-0 text-slate-400 transition-colors group-focus-within:text-emerald-700";
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ pending }) {
 
   return (
     <button
@@ -31,15 +44,24 @@ function SubmitButton() {
   );
 }
 
-export default function LoginForm({ action, initialError }) {
+export default function LoginForm({ initialError }) {
+  const router = useRouter();
+  const [pending, setPending] = useState(false);
+  async function submit(event) {
+    event.preventDefault();
+    if (pending) return;
+    setPending(true);
+    const result = await apiRequest("Login", "post", { email, password });
+    if (result.ok) { router.replace("/"); router.refresh(); }
+    else setError(result.message);
+    setPending(false);
+  }
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
   const [error, setError] = useState(initialError || "");
   const [showHelp, setShowHelp] = useState(false);
-
-
 
   return (
     <>
@@ -61,7 +83,7 @@ export default function LoginForm({ action, initialError }) {
         </div>
       ) : null}
 
-      <form action={action} className="mt-8 space-y-5 lg:mt-5 lg:space-y-4">
+      <form onSubmit={submit} className="mt-8 space-y-5 lg:mt-5 lg:space-y-4">
         <label className="block">
           <span className="text-sm font-medium text-slate-900">Email</span>
           <span className={`${fieldClass} mt-2`}>
@@ -97,7 +119,9 @@ export default function LoginForm({ action, initialError }) {
                 setPassword(event.target.value);
                 setError("");
               }}
-              onKeyUp={(event) => setCapsLock(event.getModifierState("CapsLock"))}
+              onKeyUp={(event) =>
+                setCapsLock(event.getModifierState("CapsLock"))
+              }
               onBlur={() => setCapsLock(false)}
               placeholder="Enter your password"
               required
@@ -115,15 +139,50 @@ export default function LoginForm({ action, initialError }) {
             </button>
           </div>
           {capsLock ? (
-            <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-700" role="status">
+            <p
+              className="mt-2 flex items-center gap-1.5 text-xs font-medium text-amber-700"
+              role="status"
+            >
               <TriangleAlert size={14} />
               Caps Lock is on
             </p>
           ) : null}
         </div>
 
-        <SubmitButton />
+        <SubmitButton pending={pending} />
       </form>
+
+      <section
+        aria-label="Demo credentials"
+        className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4"
+      >
+        <h3 className="font-semibold text-emerald-950">Demo accounts</h3>
+        <p className="mt-1 text-xs text-emerald-800">
+          Select an account to fill the sign-in form.
+        </p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {demoAccounts.map((account) => (
+            <button
+              key={account.email}
+              type="button"
+              onClick={() => {
+                setEmail(account.email);
+                setPassword(account.password);
+                setError("");
+              }}
+              className="min-w-0 rounded-lg border border-emerald-200 bg-white p-3 text-left hover:border-emerald-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-700"
+            >
+              <span className="block text-sm font-bold">{account.label}</span>
+              <span className="mt-1 block break-all text-xs text-slate-600">
+                {account.email}
+              </span>
+              <span className="mt-1 block text-xs text-slate-600">
+                Password: <code>{account.password}</code>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="mt-6 text-center text-sm text-slate-500 lg:mt-4">
         <button
@@ -136,7 +195,8 @@ export default function LoginForm({ action, initialError }) {
         </button>
         {showHelp ? (
           <p className="mx-auto mt-2 max-w-xs">
-            Ask your workspace admin to reset your password or check that your account is active.
+            Ask your workspace admin to reset your password or check that your
+            account is active.
           </p>
         ) : null}
       </div>

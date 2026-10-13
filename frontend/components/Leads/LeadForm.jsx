@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useState } from "react";
-import { saveLeadAction } from "@/actions/leadActions";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/apiRequest";
 
 export const inputClass =
   "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 focus:border-emerald-600 focus:outline-none focus:ring-2 focus:ring-emerald-100";
@@ -23,10 +24,18 @@ export function Feedback({ state }) {
 }
 
 export default function LeadForm({ lead }) {
-  const [state, action, pending] = useActionState(
-    saveLeadAction.bind(null, lead?.id || null),
-    {},
-  );
+  const router = useRouter();
+  const [state, setState] = useState({});
+  const [pending, setPending] = useState(false);
+  async function submit(event) {
+    event.preventDefault();
+    if (pending) return;
+    setPending(true);
+    const result = await apiRequest("Leads", "post", values, {}, lead ? `/${lead.id}/update` : "");
+    if (result.ok) { router.push(`/leads/${result.data.id}?saved=1`); router.refresh(); }
+    else setState({ error: result.message });
+    setPending(false);
+  }
   const [values, setValues] = useState({
     name: "",
     phone: "",
@@ -67,7 +76,7 @@ export default function LeadForm({ lead }) {
   ];
   return (
     <form
-      action={action}
+      onSubmit={submit}
       className="mt-6 space-y-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-8"
     >
       <Feedback state={state} />

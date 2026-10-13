@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { loginAction } from "./actions";
 import LoginForm from "./LoginForm";
 import LoginShowcase from "./LoginShowcase";
 
@@ -57,8 +56,8 @@ export default async function LoginPage({ searchParams }) {
         </div>
       </section>
 
-      <section className="flex min-h-dvh items-center justify-center px-5 py-10 sm:px-8 lg:min-h-0 lg:overflow-hidden lg:py-6">
-        <div className="w-full max-w-md">
+      <section className="flex min-h-dvh items-center justify-center px-5 py-10 sm:px-8 lg:min-h-0 lg:items-start lg:overflow-y-auto lg:py-6">
+        <div className="my-auto w-full max-w-md">
           <div className="mb-8 lg:hidden">
             <BrandMark />
           </div>
@@ -66,7 +65,7 @@ export default async function LoginPage({ searchParams }) {
           <h2 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">Sign in</h2>
           <p className="mt-2 text-base text-slate-500">Pick up right where you left off.</p>
 
-          <LoginForm action={loginAction} initialError={initialError} />
+          <LoginForm initialError={initialError} />
         </div>
       </section>
     </main>

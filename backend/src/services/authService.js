@@ -32,16 +32,7 @@ const login = async ({ email, password }) => {
     tokenExpirySeconds
   );
 
-  return {
-    token,
-    expiresIn: tokenExpirySeconds,
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  };
+  return authRepository.createSession(user.id, token, tokenExpirySeconds);
 };
 
 const getProfile = async (userId) => {
@@ -54,9 +45,7 @@ const getProfile = async (userId) => {
   return user;
 };
 
-const logout = async () => ({
-  loggedOut: true,
-});
+const logout = async () => authRepository.logout();
 
 module.exports = {
   login,

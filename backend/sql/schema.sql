@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- PostgreSQL 13+ provides gen_random_uuid() without an extension.
 
 
 
@@ -33,6 +33,8 @@ CREATE INDEX IF NOT EXISTS idx_leads_source ON leads (source);
 CREATE INDEX IF NOT EXISTS idx_leads_status ON leads (status);
 CREATE INDEX IF NOT EXISTS idx_leads_created_at ON leads (created_at);
 CREATE INDEX IF NOT EXISTS idx_leads_budget ON leads (budget);
+CREATE INDEX IF NOT EXISTS idx_leads_created_id ON leads (created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_leads_budget_id ON leads (budget DESC, id DESC);
 CREATE INDEX IF NOT EXISTS idx_lead_notes_lead_id ON lead_notes (lead_id);
 CREATE INDEX IF NOT EXISTS idx_lead_notes_created_at ON lead_notes (created_at);
 

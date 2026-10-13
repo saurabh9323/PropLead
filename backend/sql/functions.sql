@@ -1,6 +1,18 @@
 -- Application database API. Run after schema.sql; safe to reapply.
 -- Business queries live here. Node only invokes these parameterized routines.
 
+-- Shared HTTP success envelope. Domain JSON remains owned by PostgreSQL.
+CREATE OR REPLACE FUNCTION crm_response(p_result jsonb, p_status integer DEFAULT 200)
+RETURNS jsonb LANGUAGE sql IMMUTABLE STRICT AS $$
+  SELECT jsonb_build_object(
+    'ok', true, 'statusCode', p_status,
+    'message', p_result->>'message',
+    'data', CASE WHEN jsonb_typeof(p_result->'data') = 'object'
+      THEN (p_result->'data') - 'pagination' ELSE p_result->'data' END,
+    'pagination', COALESCE(p_result->'pagination', p_result#>'{data,pagination}', 'null'::jsonb)
+  );
+$$;
+
 CREATE OR REPLACE FUNCTION crm_health() RETURNS timestamptz
 LANGUAGE sql STABLE AS $$ SELECT NOW(); $$;
 
@@ -157,4 +169,116 @@ RETURNS TABLE(id uuid) LANGUAGE sql AS $$
   INSERT INTO users (name, email, password_hash, role_id)
   SELECT p_name, LOWER(p_email), p_hash, roles.id FROM roles WHERE name = p_role
   ON CONFLICT (email) DO NOTHING RETURNING id;
+$$;
+
+-- JSON transport routines. NULL means a single resource was not found.
+-- Public projections never include password hashes. Auth lookup is internal only.
+CREATE OR REPLACE FUNCTION crm_json_create_lead(p_name text, p_phone text, p_email text, p_budget numeric, p_location text, p_property_type text, p_source text, p_status text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead created', 'data', to_jsonb(r))
+  FROM crm_create_lead(p_name, p_phone, p_email, p_budget, p_location, p_property_type, p_source, p_status) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_get_lead(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead retrieved successfully', 'data', to_jsonb(r))
+  FROM crm_get_lead(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_update_lead(p_id uuid, p_name text, p_phone text, p_email text, p_budget numeric, p_location text, p_property_type text, p_source text, p_status text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead updated successfully', 'data', to_jsonb(r))
+  FROM crm_update_lead(p_id, p_name, p_phone, p_email, p_budget, p_location, p_property_type, p_source, p_status) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_update_lead_status(p_id uuid, p_status text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead status updated', 'data', to_jsonb(r))
+  FROM crm_update_lead_status(p_id, p_status) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_delete_lead(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead deleted successfully', 'data', to_jsonb(r))
+  FROM crm_delete_lead(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_add_note(p_lead_id uuid, p_note text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead note created', 'data', to_jsonb(r))
+  FROM crm_add_note(p_lead_id, p_note) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_list_notes(p_lead_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Lead notes retrieved successfully', 'data', COALESCE(jsonb_agg(to_jsonb(r) ORDER BY created_at DESC, id DESC), '[]'::jsonb))
+  FROM crm_list_notes(p_lead_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_get_user(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'User retrieved successfully', 'data', to_jsonb(r))
+  FROM crm_get_user(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_profile(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Profile retrieved successfully', 'data', to_jsonb(r))
+  FROM crm_get_user(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_list_users() RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Users retrieved successfully', 'data', COALESCE(jsonb_agg(to_jsonb(r) ORDER BY created_at DESC, id DESC), '[]'::jsonb))
+  FROM crm_list_users() r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_list_roles() RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'Roles retrieved successfully', 'data', COALESCE(jsonb_agg(to_jsonb(r) ORDER BY name), '[]'::jsonb))
+  FROM crm_list_roles() r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_auth_user(p_email text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT to_jsonb(r)
+  FROM crm_auth_user(p_email) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_find_user(p_email text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('id', r.id)
+  FROM crm_find_user(p_email) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_get_role(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT to_jsonb(r)
+  FROM crm_get_role(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_seed_user(p_name text, p_email text, p_hash text, p_role text) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('id', r.id)
+  FROM crm_seed_user(p_name, p_email, p_hash, p_role) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_list_leads(p_search text, p_source text, p_status text, p_sort_by text, p_sort_order text, p_page integer, p_page_size integer) RETURNS jsonb LANGUAGE sql STABLE AS $$
+ SELECT jsonb_build_object('message', 'Leads retrieved successfully') || crm_list_leads(p_search,p_source,p_status,p_sort_by,p_sort_order,p_page,p_page_size);
+$$;
+CREATE OR REPLACE FUNCTION crm_json_dashboard(p_page integer, p_page_size integer) RETURNS jsonb LANGUAGE sql STABLE AS $$
+ SELECT jsonb_build_object('message', 'Dashboard retrieved successfully', 'data', crm_dashboard(p_page,p_page_size));
+$$;
+CREATE OR REPLACE FUNCTION crm_json_create_user(p_name text, p_email text, p_hash text, p_role_id uuid) RETURNS jsonb LANGUAGE sql AS $$
+ SELECT jsonb_build_object('message','User created successfully','data',
+   (to_jsonb(u) - 'role_id') || jsonb_build_object('role',r.name))
+ FROM crm_create_user(p_name,p_email,p_hash,p_role_id) u JOIN roles r ON r.id=u.role_id;
+$$;
+CREATE OR REPLACE FUNCTION crm_json_session(p_id uuid, p_token text, p_expires integer) RETURNS jsonb LANGUAGE sql STABLE AS $$
+ SELECT jsonb_build_object('message','Login successful','data',jsonb_build_object(
+   'token',p_token,'expiresIn',p_expires,'user',jsonb_build_object('id',u.id,'name',u.name,'email',u.email,'role',u.role)))
+ FROM crm_get_user(p_id) u;
+$$;
+CREATE OR REPLACE FUNCTION crm_json_logout() RETURNS jsonb LANGUAGE sql IMMUTABLE AS $$
+ SELECT jsonb_build_object('message','Logout successful','data',jsonb_build_object('loggedOut',true));
 $$;

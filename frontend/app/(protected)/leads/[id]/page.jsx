@@ -1,11 +1,7 @@
+import { getAuthHeaders } from "@/lib/auth";
 import Link from "next/link";
 import { loadLead } from "@/lib/leads";
 import { apiRequest } from "@/utils/apiRequest";
-import {
-  StatusForm,
-  NoteForm,
-  DeleteLead,
-} from "@/components/Leads/LeadControls";
 
 const date = (value) =>
   new Intl.DateTimeFormat("en-IN", {
@@ -17,7 +13,7 @@ const date = (value) =>
 export default async function LeadDetailPage({ params, searchParams }) {
   const { id } = await params;
   const query = await searchParams;
-  const { lead, user, error } = await loadLead(id);
+  const { lead, error } = await loadLead(id);
   if (error)
     return (
       <div role="alert" className="rounded-xl bg-rose-50 p-6 text-rose-800">
@@ -29,7 +25,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
     );
   let notes;
   try {
-    notes = await apiRequest("Leads", "get", undefined, {}, `/${id}/notes`);
+    notes = await apiRequest("Leads", "get", undefined, await getAuthHeaders(), `/${id}/notes`);
   } catch {
     notes = { ok: false, message: "Unable to load notes. Please try again." };
   }
@@ -63,7 +59,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
           href={`/leads/${id}/edit`}
           className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 font-semibold"
         >
-          Edit lead
+          Update lead
         </Link>
       </header>
       {query.saved === "1" && (
@@ -74,7 +70,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
           Lead saved successfully.
         </p>
       )}
-      <div className="grid items-start gap-6 lg:grid-cols-[2fr_1fr]">
+      <div>
         <section className="rounded-xl border border-slate-200 bg-white p-6">
           <h2 className="text-xl font-semibold">Lead information</h2>
           <dl className="mt-5 grid gap-6 sm:grid-cols-2">
@@ -86,14 +82,9 @@ export default async function LeadDetailPage({ params, searchParams }) {
             ))}
           </dl>
         </section>
-        <section className="rounded-xl border border-slate-200 bg-white p-6">
-          <StatusForm lead={lead} />
-          {user.role === "admin" && <DeleteLead id={id} />}
-        </section>
       </div>
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="mb-5 text-xl font-semibold">Notes & comments</h2>
-        <NoteForm id={id} />
         {!notes.ok ? (
           <p role="alert" className="mt-5 text-rose-700">
             {notes.message}
@@ -116,7 +107,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
           </ul>
         ) : (
           <p className="mt-5 text-sm text-slate-500">
-            No notes yet. Record the first conversation above.
+            No notes yet. Open Update lead to add a note.
           </p>
         )}
       </section>

@@ -1,28 +1,13 @@
 const dashboardRepository = require("../repositories/dashboardRepository");
+const pagination = require("../utils/pagination");
 const AppError = require("../utils/appError");
 
-const handleDashboardRepositoryError = () => {
-  throw new AppError("Dashboard operation failed", 500);
-};
-
-const getDashboard = async () => {
+const getDashboard = async (query = {}) => {
+  const paging = pagination(query);
   try {
-    const dashboardCounts = await dashboardRepository.getDashboardCounts();
-    const totalLeads = dashboardCounts.totalLeads;
-    const conversionRate =
-      totalLeads === 0 ? 0 : Number(((dashboardCounts.closedLeads / totalLeads) * 100).toFixed(2));
-
-    return {
-      totalLeads,
-      leadsBySource: dashboardCounts.leadsBySource,
-      conversionRate,
-      statusDistribution: dashboardCounts.statusDistribution,
-    };
-  } catch (error) {
-    handleDashboardRepositoryError(error);
+    return await dashboardRepository.getDashboardCounts(paging);
+  } catch {
+    throw new AppError("Dashboard operation failed", 500);
   }
 };
-
-module.exports = {
-  getDashboard,
-};
+module.exports = { getDashboard };

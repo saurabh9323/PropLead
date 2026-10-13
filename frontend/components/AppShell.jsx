@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
+import { apiRequest } from "@/utils/apiRequest";
 import {
   BarChart3,
   ChevronRight,
@@ -29,8 +30,18 @@ const getNavItems = (role) => {
   return role === "admin" ? adminItems : crmItems;
 };
 
-export default function AppShell({ user, logoutAction, children }) {
+export default function AppShell({ user, children }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+  async function logout(event) {
+    event.preventDefault();
+    if (loggingOut) return;
+    setLoggingOut(true);
+    const result = await apiRequest("Logout", "post", {});
+    if (result.ok) { router.replace("/login"); router.refresh(); }
+    else { setLoggingOut(false); window.alert(result.message); }
+  }
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const navItems = getNavItems(user?.role);
   const groupedItems = navItems.reduce((groups, item) => {
@@ -76,7 +87,10 @@ export default function AppShell({ user, logoutAction, children }) {
                     }
                     href={item.href}
                     key={item.label}
-                    onClick={() => setIsMobileNavOpen(false)}
+                    onClick={(event) => {
+                      if (isActive) event.preventDefault();
+                      setIsMobileNavOpen(false);
+                    }}
                     prefetch
                   >
                     <span className="flex min-w-0 items-center gap-3">
@@ -98,7 +112,7 @@ export default function AppShell({ user, logoutAction, children }) {
           <p className="mt-1 truncate font-semibold text-white">{user?.name}</p>
           <p className="text-xs text-white/70">{user?.role}</p>
         </div>
-        <form action={logoutAction} className="mt-3">
+        <form onSubmit={logout} className="mt-3">
           <button
             className="flex w-full items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm font-semibold text-white/90 hover:bg-white/10"
             type="submit"

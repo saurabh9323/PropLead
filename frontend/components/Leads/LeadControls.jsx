@@ -1,27 +1,40 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import {
-  addNoteAction,
-  updateStatusAction,
-  deleteLeadAction,
-} from "@/actions/leadActions";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { apiRequest } from "@/utils/apiRequest";
 import { Feedback, inputClass, buttonClass, statuses } from "./LeadForm";
 
+
+function useLeadMutation(id, suffix, onSuccess) {
+  const router = useRouter();
+  const [state, setState] = useState({});
+  const [pending, setPending] = useState(false);
+  async function submit(event, body) {
+    event.preventDefault();
+    if (pending) return;
+    setPending(true);
+    const result = await apiRequest("Leads", "post", body, {}, `/${id}/${suffix}`);
+    setState(result.ok ? { success: result.message } : { error: result.message });
+    if (result.ok) { onSuccess?.(); router.refresh(); }
+    setPending(false);
+  }
+  return [state, submit, pending];
+}
+
 export function StatusForm({ lead }) {
-  const [state, action, pending] = useActionState(
-    updateStatusAction.bind(null, lead.id),
-    {},
-  );
+  const [status, setStatus] = useState(lead.status);
+  const [state, submit, pending] = useLeadMutation(lead.id, "status");
   return (
-    <form action={action} className="space-y-3">
+    <form onSubmit={(event) => submit(event, { status })} className="space-y-3">
       <Feedback state={state} />
       <label className="block text-sm font-medium">
         Lead status
         <select
           key={lead.status}
           name="status"
-          defaultValue={lead.status}
+          value={status}
+          onChange={(event) => setStatus(event.target.value)}
           className={inputClass}
           disabled={pending}
         >
@@ -39,13 +52,9 @@ export function StatusForm({ lead }) {
 
 export function NoteForm({ id }) {
   const [note, setNote] = useState("");
-  const [state, action, pending] = useActionState(async (previous, data) => {
-    const result = await addNoteAction(id, previous, data);
-    if (result.success) setNote("");
-    return result;
-  }, {});
+  const [state, submit, pending] = useLeadMutation(id, "notes", () => setNote(""));
   return (
-    <form action={action} className="space-y-3">
+    <form onSubmit={(event) => submit(event, { note })} className="space-y-3">
       <Feedback state={state} />
       <label className="block text-sm font-medium">
         Add a note
@@ -70,15 +79,13 @@ export function NoteForm({ id }) {
 
 export function DeleteLead({ id }) {
   const [confirming, setConfirming] = useState(false);
-  const [state, action, pending] = useActionState(
-    deleteLeadAction.bind(null, id),
-    {},
-  );
+  const router = useRouter();
+  const [state, submit, pending] = useLeadMutation(id, "delete", () => router.push("/leads?deleted=1"));
   return (
     <div className="mt-6 border-t border-rose-100 pt-5">
       <Feedback state={state} />
       {confirming ? (
-        <form action={action} className="space-y-3">
+        <form onSubmit={(event) => submit(event, {})} className="space-y-3">
           <p className="text-sm text-rose-800">
             Delete this lead and all its notes? This cannot be undone.
           </p>

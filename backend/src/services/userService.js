@@ -62,14 +62,7 @@ const createUser = async ({ name, email, password, roleId }) => {
     roleId: cleanRoleId,
   });
 
-  return {
-    id: createdUser.id,
-    name: createdUser.name,
-    email: createdUser.email,
-    role: role.name,
-    created_at: createdUser.created_at,
-    updated_at: createdUser.updated_at,
-  };
+  return createdUser;
 };
 
 module.exports = {

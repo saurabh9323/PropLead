@@ -1,6 +1,7 @@
 require("dotenv").config();
 const pool = require("../src/db/db");
 const { hashPassword } = require("../src/utils/password");
+const { seedUser } = require("../src/repositories/userRepository");
 
 async function main() {
   const {
@@ -12,21 +13,14 @@ async function main() {
     throw new Error(
       "Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters).",
     );
-  const role = await pool.query("SELECT id FROM roles WHERE name = 'admin'");
-  if (!role.rows[0]) throw new Error("Apply sql/schema.sql first.");
-  const result = await pool.query(
-    "INSERT INTO users (name, email, password_hash, role_id) VALUES ($1, $2, $3, $4) ON CONFLICT (email) DO NOTHING RETURNING id",
-    [
-      ADMIN_NAME,
-      ADMIN_EMAIL.trim().toLowerCase(),
-      await hashPassword(ADMIN_PASSWORD),
-      role.rows[0].id,
-    ],
+  const result = await seedUser(
+    ADMIN_NAME,
+    ADMIN_EMAIL.trim().toLowerCase(),
+    await hashPassword(ADMIN_PASSWORD),
+    "admin",
   );
   console.log(
-    result.rowCount
-      ? "Admin created."
-      : "Account already exists; no changes made.",
+    result ? "Admin created." : "Account already exists; no changes made.",
   );
 }
 main()

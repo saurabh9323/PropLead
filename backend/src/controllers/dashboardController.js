@@ -3,12 +3,9 @@ const handleControllerError = require("../utils/controllerError");
 
 const getDashboard = async (req, res) => {
   try {
-    const dashboard = await dashboardService.getDashboard();
+    const dashboard = await dashboardService.getDashboard(req.query);
 
-    res.status(200).json({
-      message: "Dashboard retrieved successfully",
-      data: dashboard,
-    });
+    res.status(200).json(dashboard);
   } catch (error) {
     handleControllerError(res, error);
   }

@@ -1,7 +1,12 @@
+"use client";
+
 import { Inbox, Mail, MapPin, Phone, Search } from "lucide-react";
 import Link from "next/link";
-import { isApiConfigured } from "@/api/MainApi";
+import { useEffect, useState } from "react";
+import LeadActions from "./LeadActions";
 import { apiRequest } from "@/utils/apiRequest";
+import Pagination from "@/components/Pagination";
+import { getPagination } from "@/lib/pagination";
 import { getStatusStyle } from "../Dashboard/statusStyles";
 
 const statusOptions = ["New", "Contacted", "Site Visit", "Closed"];
@@ -11,36 +16,6 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   currency: "INR",
   maximumFractionDigits: 0,
 });
-
-async function getLeads(filters) {
-  if (!isApiConfigured) {
-    return {
-      data: [],
-      error: "NEXT_PUBLIC_API_BASE_URL is not configured.",
-    };
-  }
-
-  try {
-    const result = await apiRequest("Leads", "get", filters);
-
-    if (!result.ok) {
-      return {
-        data: [],
-        error: result.message || "Unable to load leads.",
-      };
-    }
-
-    return {
-      data: result.data || [],
-      error: null,
-    };
-  } catch (error) {
-    return {
-      data: [],
-      error: "Unable to reach the backend API.",
-    };
-  }
-}
 
 function formatBudget(value) {
   const numericValue = Number(value);
@@ -54,25 +29,13 @@ function formatBudget(value) {
 
 function getFilters(params) {
   return {
+    ...getPagination(params),
     search: typeof params.search === "string" ? params.search.trim() : "",
     source: typeof params.source === "string" ? params.source.trim() : "",
     status: typeof params.status === "string" ? params.status : "",
     sortBy: params.sortBy === "budget" ? "budget" : "created_at",
     sortOrder: params.sortOrder === "asc" ? "asc" : "desc",
   };
-}
-
-// Build a link that keeps the current filters but changes some of them.
-function buildHref(filters, overrides = {}) {
-  const merged = { ...filters, ...overrides };
-  const query = new URLSearchParams();
-
-  Object.entries(merged).forEach(([key, value]) => {
-    if (value) query.set(key, value);
-  });
-
-  const text = query.toString();
-  return text ? `?${text}` : "?";
 }
 
 function getInitials(name) {
@@ -94,7 +57,10 @@ function StatusBadge({ status }) {
     <span
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${style.badge}`}
     >
-      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: style.hex }} />
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: style.hex }}
+      />
       {status}
     </span>
   );
@@ -108,28 +74,35 @@ function Avatar({ name }) {
   );
 }
 
-function StatusTabs({ filters }) {
-  const tabs = [{ label: "All leads", value: "" }, ...statusOptions.map((s) => ({ label: s, value: s }))];
+function StatusTabs({ filters, navigate }) {
+  const tabs = [
+    { label: "All leads", value: "" },
+    ...statusOptions.map((s) => ({ label: s, value: s })),
+  ];
 
   return (
-    <nav aria-label="Filter by status" className="-mx-4 mt-6 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    <nav
+      aria-label="Filter by status"
+      className="-mx-4 mt-6 overflow-x-auto px-4 sm:mx-0 sm:px-0"
+    >
       <ul className="flex w-max gap-2 sm:w-auto sm:flex-wrap">
         {tabs.map((tab) => {
           const active = filters.status === tab.value;
 
           return (
             <li key={tab.label}>
-              <a
-                aria-current={active ? "page" : undefined}
+              <button
+                type="button"
+                aria-pressed={active}
                 className={`block whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 ${
                   active
                     ? "bg-[#12352f] text-white"
                     : "border border-slate-200 bg-white text-slate-700 hover:bg-emerald-50"
                 }`}
-                href={buildHref(filters, { status: tab.value })}
+                onClick={() => navigate({ ...filters, status: tab.value, page: 1 })}
               >
                 {tab.label}
-              </a>
+              </button>
             </li>
           );
         })}
@@ -138,19 +111,37 @@ function StatusTabs({ filters }) {
   );
 }
 
-function FilterForm({ filters }) {
-  const hasActiveFilters = Boolean(filters.search || filters.source || filters.status);
+function FilterForm({ filters, navigate }) {
+  const hasActiveFilters = Boolean(
+    filters.search || filters.source || filters.status,
+  );
 
   return (
-    <form className="mt-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5" method="GET">
+    <form
+      key={`${filters.search}|${filters.source}|${filters.status}|${filters.sortBy}|${filters.sortOrder}`}
+      onSubmit={(event) => {
+        event.preventDefault();
+        const fields = event.currentTarget.elements;
+        const next = Object.fromEntries(["search", "source", "status", "sortBy", "sortOrder", "pageSize"].map(name => [name, fields.namedItem(name).value]));
+        navigate({ ...next, page: 1 });
+      }}
+      className="mt-4 rounded-xl border border-slate-200 bg-white p-4 sm:p-5"
+    >
       {/* Status is chosen with the tabs above; keep it when the form is submitted. */}
       <input name="status" type="hidden" value={filters.status} />
+      <input name="pageSize" type="hidden" value={filters.pageSize} />
+      <input name="page" type="hidden" value="1" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[2fr_1.2fr_1fr_1fr_auto] xl:items-end">
         <label className="block sm:col-span-2 xl:col-span-1">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Search</span>
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+            Search
+          </span>
           <span className="relative block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+              size={16}
+            />
             <input
               className={`${inputClass} pl-9`}
               defaultValue={filters.search}
@@ -162,21 +153,40 @@ function FilterForm({ filters }) {
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Source</span>
-          <input className={inputClass} defaultValue={filters.source} name="source" placeholder="e.g. Website" />
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+            Source
+          </span>
+          <input
+            className={inputClass}
+            defaultValue={filters.source}
+            name="source"
+            placeholder="e.g. Website"
+          />
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Sort by</span>
-          <select className={inputClass} defaultValue={filters.sortBy} name="sortBy">
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+            Sort by
+          </span>
+          <select
+            className={inputClass}
+            defaultValue={filters.sortBy}
+            name="sortBy"
+          >
             <option value="created_at">Created date</option>
             <option value="budget">Budget</option>
           </select>
         </label>
 
         <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">Order</span>
-          <select className={inputClass} defaultValue={filters.sortOrder} name="sortOrder">
+          <span className="mb-1.5 block text-sm font-medium text-slate-700">
+            Order
+          </span>
+          <select
+            className={inputClass}
+            defaultValue={filters.sortOrder}
+            name="sortOrder"
+          >
             <option value="desc">Descending</option>
             <option value="asc">Ascending</option>
           </select>
@@ -184,12 +194,11 @@ function FilterForm({ filters }) {
 
         <div className="flex flex-col-reverse gap-2 sm:col-span-2 sm:flex-row sm:justify-end xl:col-span-1">
           {hasActiveFilters ? (
-            <a
-              className="rounded-lg px-4 py-2.5 text-center text-sm font-semibold text-slate-600 hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
-              href="?"
-            >
-              Clear
-            </a>
+            <button
+              type="button"
+              className="rounded-lg px-4 py-2.5 text-center text-sm font-semibold text-slate-600 hover:bg-slate-100"
+              onClick={() => navigate({ pageSize: filters.pageSize })}
+            >Clear</button>
           ) : null}
           <button
             className="rounded-lg bg-[#12352f] px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0c2420] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
@@ -224,12 +233,14 @@ function ContactInfo({ lead }) {
           <span className="truncate">{lead.email}</span>
         </a>
       ) : null}
-      {!lead.phone && !lead.email ? <span className="text-slate-400">No contact details</span> : null}
+      {!lead.phone && !lead.email ? (
+        <span className="text-slate-400">No contact details</span>
+      ) : null}
     </div>
   );
 }
 
-function LeadsTable({ leads }) {
+function LeadsTable({ leads, canDelete, onDeleted, loading }) {
   return (
     <section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
       {/* Tablet and desktop: table */}
@@ -243,17 +254,28 @@ function LeadsTable({ leads }) {
               <th className="px-5 py-3 font-semibold">Location</th>
               <th className="px-5 py-3 font-semibold">Source</th>
               <th className="px-5 py-3 font-semibold">Status</th>
+              <th className="px-5 py-3 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {leads.map((lead) => (
-              <tr className="transition-colors hover:bg-emerald-50/50" key={lead.id}>
+              <tr
+                className="transition-colors hover:bg-emerald-50/50"
+                key={lead.id}
+              >
                 <td className="px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <Avatar name={lead.name} />
                     <div className="min-w-0">
-                      <Link href={`/leads/${lead.id}`} className="block truncate font-semibold text-emerald-900 underline-offset-4 hover:underline">{lead.name}</Link>
-                      <p className="text-xs text-slate-500">{lead.property_type}</p>
+                      <Link
+                        href={`/leads/${lead.id}`}
+                        className="block truncate font-semibold text-emerald-900 underline-offset-4 hover:underline"
+                      >
+                        {lead.name}
+                      </Link>
+                      <p className="text-xs text-slate-500">
+                        {lead.property_type}
+                      </p>
                     </div>
                   </div>
                 </td>
@@ -269,10 +291,13 @@ function LeadsTable({ leads }) {
                     {lead.location || "-"}
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-slate-700">{lead.source || "-"}</td>
+                <td className="px-5 py-3.5 text-slate-700">
+                  {lead.source || "-"}
+                </td>
                 <td className="px-5 py-3.5">
                   <StatusBadge status={lead.status} />
                 </td>
+                <td className="px-5 py-3.5 align-top"><LeadActions lead={lead} canDelete={canDelete} onDeleted={onDeleted} disabled={loading} /></td>
               </tr>
             ))}
           </tbody>
@@ -287,7 +312,12 @@ function LeadsTable({ leads }) {
               <Avatar name={lead.name} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <Link href={`/leads/${lead.id}`} className="truncate font-semibold text-emerald-900 underline-offset-4 hover:underline">{lead.name}</Link>
+                  <Link
+                    href={`/leads/${lead.id}`}
+                    className="truncate font-semibold text-emerald-900 underline-offset-4 hover:underline"
+                  >
+                    {lead.name}
+                  </Link>
                   <StatusBadge status={lead.status} />
                 </div>
                 <p className="text-xs text-slate-500">{lead.property_type}</p>
@@ -301,17 +331,24 @@ function LeadsTable({ leads }) {
             <dl className="mt-3 grid grid-cols-3 gap-3 rounded-lg bg-slate-50 p-3 text-sm">
               <div className="min-w-0">
                 <dt className="text-xs text-slate-500">Budget</dt>
-                <dd className="truncate font-semibold text-slate-900">{formatBudget(lead.budget)}</dd>
+                <dd className="truncate font-semibold text-slate-900">
+                  {formatBudget(lead.budget)}
+                </dd>
               </div>
               <div className="min-w-0">
                 <dt className="text-xs text-slate-500">Location</dt>
-                <dd className="truncate text-slate-700">{lead.location || "-"}</dd>
+                <dd className="truncate text-slate-700">
+                  {lead.location || "-"}
+                </dd>
               </div>
               <div className="min-w-0">
                 <dt className="text-xs text-slate-500">Source</dt>
-                <dd className="truncate text-slate-700">{lead.source || "-"}</dd>
+                <dd className="truncate text-slate-700">
+                  {lead.source || "-"}
+                </dd>
               </div>
             </dl>
+            <div className="mt-3"><LeadActions lead={lead} canDelete={canDelete} onDeleted={onDeleted} disabled={loading} /></div>
           </li>
         ))}
       </ul>
@@ -319,10 +356,36 @@ function LeadsTable({ leads }) {
   );
 }
 
-export default async function LeadsComp({ searchParams }) {
-  const filters = getFilters(searchParams || {});
-  const { data: leads, error } = await getLeads(filters);
-
+export default function LeadsComp({ canDelete = false }) {
+  const [filters, setFilters] = useState(() => getFilters({}));
+  const [reloadKey, setReloadKey] = useState(0);
+  const [result, setResult] = useState({ data: [], pagination: null, error: null });
+  const [loading, setLoading] = useState(true);
+  const { data: leads, pagination, error } = result;
+  function navigate(next) {
+    setFilters(getFilters(next));
+  }
+  useEffect(() => {
+    // Filters live in the request body, including when arriving from an old URL.
+    if (window.location.search) window.history.replaceState(null, "", "/leads");
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    async function load() {
+      await Promise.resolve();
+      if (controller.signal.aborted) return;
+      setLoading(true);
+      try {
+        const body = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ""));
+        const response = await apiRequest("Leads", "post", body, {}, "/list", { signal: controller.signal });
+        if (controller.signal.aborted) return;
+        setResult({ data: response.data || [], pagination: response.pagination, error: response.ok ? null : response.message });
+        setLoading(false);
+      } catch (error) { if (error.code !== "ERR_CANCELED") setLoading(false); }
+    }
+    load();
+    return () => controller.abort();
+  }, [filters, reloadKey]);
   return (
     <div className="mx-auto w-full max-w-[1600px]">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -335,17 +398,22 @@ export default async function LeadsComp({ searchParams }) {
             Search, filter and sort every lead in your pipeline.
           </p>
         </div>
-        <Link href="/leads/new" className="rounded-lg bg-[#12352f] px-5 py-2.5 text-center font-semibold text-white hover:bg-emerald-900">Add lead</Link>
+        <Link
+          href="/leads/new"
+          className="rounded-lg bg-[#12352f] px-5 py-2.5 text-center font-semibold text-white hover:bg-emerald-900"
+        >
+          Add lead
+        </Link>
         {!error ? (
           <p className="w-fit rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
-            {leads.length} {leads.length === 1 ? "lead" : "leads"}
+            {pagination?.total ?? leads.length} leads
           </p>
         ) : null}
       </header>
 
-      <StatusTabs filters={filters} />
-      {searchParams?.deleted === "1" && <p role="status" className="mt-4 rounded-lg bg-emerald-50 p-3 text-emerald-800">Lead deleted successfully.</p>}
-      <FilterForm filters={filters} />
+      <StatusTabs filters={filters} navigate={navigate} />
+      <FilterForm filters={filters} navigate={navigate} />
+      {loading && <p role="status" className="mt-4 text-sm text-emerald-800">Loading leads…</p>}
 
       {error ? (
         <section
@@ -355,7 +423,7 @@ export default async function LeadsComp({ searchParams }) {
           <h2 className="font-semibold">Leads unavailable</h2>
           <p className="mt-2 text-sm">{error}</p>
         </section>
-      ) : leads.length === 0 ? (
+      ) : loading && !pagination ? null : leads.length === 0 ? (
         <section className="mt-3 flex flex-col items-center rounded-xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
           <span className="grid h-12 w-12 place-items-center rounded-full bg-slate-100 text-slate-500">
             <Inbox size={22} />
@@ -364,16 +432,14 @@ export default async function LeadsComp({ searchParams }) {
           <p className="mt-1 max-w-sm text-sm text-slate-500">
             Nothing matches these filters. Clear them to see every lead.
           </p>
-          <a
-            className="mt-4 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50"
-            href="?"
-          >
+          <button type="button" className="mt-4 rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50" onClick={() => navigate({ pageSize: filters.pageSize })}>
             Clear filters
-          </a>
+          </button>
         </section>
       ) : (
-        <LeadsTable leads={leads} />
+        <LeadsTable leads={leads} canDelete={canDelete} loading={loading} onDeleted={() => setReloadKey((value) => value + 1)} />
       )}
+      {!error && <Pagination pagination={pagination} loading={loading} onNavigate={(page, pageSize) => navigate({ ...filters, page, pageSize })} />}
     </div>
   );
 }

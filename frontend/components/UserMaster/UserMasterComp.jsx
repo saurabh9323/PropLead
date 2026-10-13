@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { isApiConfigured } from "@/api/MainApi";
-import { requireUser } from "@/lib/auth";
+import { requireUser, getAuthHeaders } from "@/lib/auth";
 import { apiRequest } from "@/utils/apiRequest";
 import UserMasterAlert from "./UserMasterAlert";
 import UserMasterClient from "./UserMasterClient";
@@ -11,7 +11,7 @@ async function fetchList(resource, label) {
   }
 
   try {
-    const result = await apiRequest(resource, "get");
+    const result = await apiRequest(resource, "get", undefined, await getAuthHeaders());
 
     if (!result.ok) {
       return { data: [], error: result.message || `Unable to load ${label}.` };

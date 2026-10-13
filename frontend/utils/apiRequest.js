@@ -1,8 +1,8 @@
 import axios from "axios";
-import { cookies } from "next/headers";
-import { apiurls } from "@/api/MainApi";
+import { apiurls, browserApiUrls } from "@/api/MainApi";
+import { emptyApiResponse } from "@/lib/Types/ApiResponse";
 
-const methodsWithBody = ["post", "put", "patch", "delete"];
+const methodsWithBody = ["post"];
 
 function removeEmptyQueryValues(data) {
   if (!data) return undefined;
@@ -12,24 +12,18 @@ function removeEmptyQueryValues(data) {
   );
 }
 
-async function getTokenHeader() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("proplead_token")?.value;
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export async function apiRequest(key, method, data, headers = {}, path = "") {
-  const url = apiurls[key] && `${apiurls[key]}${path}`;
+export async function apiRequest(key, method, data, headers = {}, path = "", options = {}) {
+  const urls = typeof window === "undefined" ? apiurls : browserApiUrls;
+  const url = urls[key] && `${urls[key]}${path}`;
 
   if (!url || url.includes("undefined")) {
     throw new Error(`API URL not found for key: ${key}`);
   }
 
   const requestMethod = method.toLowerCase();
-  const tokenHeader = await getTokenHeader();
   const finalHeaders = {
-    ...tokenHeader,
+    Accept: "application/json",
+    ...(requestMethod === "post" ? { "Content-Type": "application/json" } : {}),
     ...headers,
   };
 
@@ -37,28 +31,22 @@ export async function apiRequest(key, method, data, headers = {}, path = "") {
     const response = await axios({
       method: requestMethod,
       timeout: 15000,
+      signal: options.signal,
       url,
       headers: finalHeaders,
       params: requestMethod === "get" ? removeEmptyQueryValues(data) : undefined,
-      data: methodsWithBody.includes(requestMethod) ? data : undefined,
+      data: methodsWithBody.includes(requestMethod) ? (data ?? {}) : undefined,
     });
 
-    return {
-      ok: true,
-      statusCode: response.status,
-      ...response.data,
-    };
+    return response.data;
   } catch (error) {
+    if (axios.isCancel(error)) throw error;
     if (error.response) {
-      return {
-        ok: false,
-        statusCode: error.response.status,
-        ...error.response.data,
-      };
+      return error.response.data;
     }
 
     console.error(`API request failed: ${requestMethod.toUpperCase()} ${key}`, error.code);
-    throw error;
+    return { ...emptyApiResponse, statusCode: 503, message: "Unable to reach the backend API. Please try again." };
   }
 }
 
