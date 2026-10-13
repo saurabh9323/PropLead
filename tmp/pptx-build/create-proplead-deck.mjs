@@ -8,7 +8,7 @@ const skillDir = "C:/Users/saurabh/.codex/plugins/cache/openai-primary-runtime/p
 const runtimePython = "C:/Users/saurabh/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe";
 const buildDir = path.join(workspaceDir, "tmp/pptx-build");
 const outDir = path.join(workspaceDir, "deliverables");
-const finalPath = path.join(outDir, "PropLead-CRM-Presentation.pptx");
+const finalPath = path.join(outDir, "PropLead-CRM-Presentation-Future-Upgrades.pptx");
 
 const W = 1280;
 const H = 720;
@@ -218,13 +218,13 @@ const slides = [
     ],
   },
   {
-    title: "Horizontal and vertical scaling",
-    subtitle: "Both scaling styles can work together. The right choice depends on traffic, database load and operational cost.",
+    title: "Lead operations upgrades",
+    subtitle: "These additions improve daily work for CRM users without changing the current lead CRUD foundation.",
     cards: [
-      ["Vertical scaling", "Increase CPU, RAM and database capacity. Use a larger Render instance and Supabase compute plan when traffic grows gradually.", "#0f766e"],
-      ["Horizontal scaling", "Run multiple stateless API instances behind a load balancer. Keep JWT auth and database state outside the server.", "#2563eb"],
-      ["Database scaling", "Use Supabase pooler, indexes, read replicas for reporting and query pagination to reduce pressure on the primary database.", "#d97706"],
-      ["Frontend scaling", "Let Vercel serve static assets globally and keep API proxy routes lightweight.", "#7c3aed"],
+      ["Lead assignment", "Assign each lead to a CRM user, show owner filters and prevent duplicate follow-up.", "#0f766e"],
+      ["Follow-up calendar", "Store due dates, reminders and site visit slots for each lead.", "#2563eb"],
+      ["Kanban pipeline", "Drag leads across status columns while preserving the existing status API.", "#d97706"],
+      ["Duplicate detection", "Warn users when phone or email already exists before creating a new lead.", "#7c3aed"],
     ],
   },
   {
@@ -239,14 +239,25 @@ const slides = [
     ],
   },
   {
-    title: "Interview talking points",
-    subtitle: "The project demonstrates full stack ownership across UI, API design, data modeling and deployment.",
+    title: "Automation and communication upgrades",
+    subtitle: "These features help the team respond faster and keep a clear history of customer communication.",
     bullets: [
-      "I reused the template architecture instead of replacing it",
-      "I kept validation in the entity and service layer so controllers stay simple",
-      "I used PostgreSQL constraints and functions to protect data integrity",
-      "I added role-based workflows and kept browser auth in an HttpOnly cookie",
-      "I can explain how the app scales vertically first and horizontally when the API becomes stateless",
+      "Email and WhatsApp templates for first contact, site visit confirmation and closure follow-up",
+      "Reminder notifications for leads with no activity after a configured number of days",
+      "Activity timeline that combines notes, status changes, owner changes and reminder events",
+      "CSV import with validation preview, duplicate warnings and partial success reporting",
+      "Export filtered leads for managers without exposing passwords or internal token data",
+    ],
+  },
+  {
+    title: "Analytics and governance upgrades",
+    subtitle: "These upgrades make the CRM more useful for management reporting and operational control.",
+    bullets: [
+      "Source quality score based on conversion rate, average budget and time to close",
+      "Team performance dashboard with assigned leads, overdue follow-ups and closure rate",
+      "Audit log for create, update, delete and login events with admin-only access",
+      "Custom fields for property campaigns without changing the lead table every time",
+      "Role permission matrix so admins can tune access beyond the fixed admin and CRM roles",
     ],
   },
 ];
@@ -317,7 +328,7 @@ async function build() {
     requiredNativeChartOwnerSlides: [],
     fontPolicy: { basis: "design", families: ["Aptos"] },
     verifyArtifactToolImport: true,
-    receiptPath: path.join(buildDir, "PropLead-CRM-Presentation.validation.json"),
+    receiptPath: path.join(buildDir, "PropLead-CRM-Presentation-Future-Upgrades.validation.json"),
   });
 
   for (const [i, slide] of presentation.slides.items.entries()) {
