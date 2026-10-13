@@ -351,10 +351,10 @@ export default async function DashboardComp({ searchParams = {} }) {
       <header className="flex flex-col gap-4 border-b border-emerald-100 pb-5 sm:pb-6 md:flex-row md:items-end md:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-emerald-800">
-            Live CRM snapshot
+            Dashboard
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
-            PropLead control room
+            PropLead dashboard
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base sm:leading-7">
             Track lead quality, site visits, budget pipeline and closures in one

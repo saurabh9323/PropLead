@@ -16,13 +16,13 @@ import {
 
 const getNavItems = (role) => {
   const adminItems = [
-    { label: "Control Room", href: "/", icon: Home, group: "Workspace" },
+    { label: "Dashboard", href: "/", icon: Home, group: "Workspace" },
     { label: "Team & Roles", href: "/users", icon: ShieldCheck, group: "Workspace" },
     { label: "Lead Pipeline", href: "/leads", icon: BarChart3, group: "Workspace" },
   ];
 
   const crmItems = [
-    { label: "Control Room", href: "/", icon: Home, group: "Workspace" },
+    { label: "Dashboard", href: "/", icon: Home, group: "Workspace" },
     { label: "My Pipeline", href: "/leads", icon: BarChart3, group: "Sales Flow" },
   ];
 
