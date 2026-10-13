@@ -13,21 +13,71 @@ A real-estate lead management app built with Next.js/React, Tailwind, Express an
 
 ## Local setup
 
-1. Install Node.js 20.9+ and PostgreSQL 13+. Create a database named `proplead`.
-2. Run `npm ci --prefix backend` and `npm ci --prefix frontend`.
-3. Create `backend/.env`. Set `DATABASE_URL` to your PostgreSQL connection string and `JWT_SECRET` to a unique random secret. The API defaults to port 5000.
-4. The frontend defaults to backend URL `http://localhost:5000/api`. Use `frontend/.env.local` for any environment overrides required by your deployment.
-5. Run `npm run db:setup --prefix backend` to install the schema and all stored functions. Alternatively run `backend/sql/schema.sql`, then `backend/sql/functions.sql`, in your database client.
-6. Run `npm run seed-demo --prefix backend` to create the accounts displayed on the login page. Existing accounts and passwords are never overwritten. For a separate administrator, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12+ characters) in `backend/.env` and run `npm run create-admin --prefix backend`.
-7. In separate terminals run `npm run dev:backend` and `npm run dev:frontend` from the project root. Open http://localhost:3000 and sign in with your account.
+1. Install Node.js 20.9+ and PostgreSQL 13+, or create a Supabase PostgreSQL project.
+2. Install dependencies:
+   ```bash
+   npm ci --prefix backend
+   npm ci --prefix frontend
+   ```
+3. Create environment files from the safe examples:
+   ```bash
+   copy backend\.env.example backend\.env
+   copy frontend\.env.example frontend\.env.local
+   ```
+   On macOS/Linux, use `cp` instead of `copy`.
+4. Fill `backend/.env` with your own `DATABASE_URL` and a long random `JWT_SECRET`. Do not commit real `.env` files.
+5. Keep `frontend/.env.local` pointed at the Express API, normally:
+   ```env
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+   ```
+6. Install the database schema, indexes, roles and stored functions:
+   ```bash
+   npm run db:setup --prefix backend
+   ```
+   This runs `backend/sql/schema.sql` and `backend/sql/functions.sql`. You may also run those two SQL files manually in your database client.
+7. Seed the demo users shown on the login page:
+   ```bash
+   npm run seed-demo --prefix backend
+   ```
+   Existing accounts are not overwritten. To create your own admin, set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env`, then run:
+   ```bash
+   npm run create-admin --prefix backend
+   ```
+8. Start the application in two terminals from the project root:
+   ```bash
+   npm run dev:backend
+   npm run dev:frontend
+   ```
+9. Open http://localhost:3000 and sign in.
 
 The backend reads `.env` from its working directory. The root scripts start it in `backend`. Database schema installation is explicit; app startup never applies migrations.
+
+## Environment variables
+
+`backend/.env.example` and `frontend/.env.example` contain placeholders only. The real `.env` files are ignored by Git, while `.env.example` files are intentionally trackable.
+
+Backend variables:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DATABASE_URL` | Yes | PostgreSQL/Supabase connection string used by Express and database setup scripts |
+| `JWT_SECRET` | Yes | Secret used to sign and verify one-hour JWT sessions |
+| `PORT` | No | Express port; defaults to `5000` |
+| `ADMIN_NAME` | No | Name used by `npm run create-admin` |
+| `ADMIN_EMAIL` | Only for `create-admin` | Email used by `npm run create-admin` |
+| `ADMIN_PASSWORD` | Only for `create-admin` | Password used by `npm run create-admin`; must be at least 12 characters |
+
+Frontend variables:
+
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_API_BASE_URL` | Yes | Base URL for server-side Next.js calls to the Express API |
 
 ## REST API
 
 All routes below use `/api`. Except login and health, requests need `Authorization: Bearer <token>`.
 
-GET requests use query parameters. POST requests use `Content-Type: application/json` and a JSON object body, including `{}` for logout/deletion. Browser and server components share `frontend/utils/apiRequest.js`. The browser calls the same-origin Next.js API route, which forwards JSON to Express and manages the HttpOnly session cookie. There are no FormData submissions or mutation server actions.
+GET requests use query parameters. POST and PUT requests use `Content-Type: application/json` and a JSON object body. Browser and server components share `frontend/utils/apiRequest.js`. Browser calls go to the same-origin Next.js API proxy under `/api`, which forwards requests to Express and manages the HttpOnly session cookie. Server components call the Express API base URL from `NEXT_PUBLIC_API_BASE_URL`.
 
 Every API returns `{ ok, statusCode, message, data, pagination }`. PostgreSQL `crm_response` formats database success results. The backend `apiResponse` helper formats infrastructure/error results. Errors use `data: null` and `pagination: null`; non-paginated successes use `pagination: null`. HTTP status and `statusCode` match.
 
@@ -40,16 +90,18 @@ Every API returns `{ ok, statusCode, message, data, pagination }`. PostgreSQL `c
 | GET | /leads | Paginated list; search, source, status, sortBy=created_at/budget, sortOrder=asc/desc, page, pageSize |
 | POST | /leads | Create lead |
 | GET | /leads/:id | Lead details |
-| POST | /leads/:id/update | Replace editable lead fields |
+| PUT | /leads/:id | Replace editable lead fields |
 | POST | /leads/:id/status | Update only status with `{ "status": "Contacted" }` |
-| POST | /leads/:id/delete | Delete lead (admin only) |
+| DELETE | /leads/:id | Delete lead (admin only) |
 | GET / POST | /leads/:id/notes | List notes / add `{ "note": "Follow up Friday" }` |
 | GET | /dashboard | Global dashboard metrics plus recentLeads; page and pageSize paginate the lead rows |
 | GET / POST | /users | List/create users (admin only) |
 | GET | /users/:id | User details (admin only) |
 | GET | /roles | Roles (admin only) |
 
-Lead create/update payload fields: `name`, `phone`, `email`, `budget`, `location`, `property_type`, `source`, `status`. Email is optional; status defaults to New for create. Budget must be nonnegative and at most 9,999,999,999.99. Notes must contain 1–5,000 non-whitespace characters after trimming.
+Lead create/update payload fields: `name`, `phone`, `email`, `budget`, `location`, `property_type`, `source`, `status`. Email is optional; status defaults to New for create. Budget must be nonnegative and at most 9,999,999,999.99. Notes must contain 1-5,000 non-whitespace characters after trimming.
+
+Temporary compatibility aliases remain available during the REST migration: `POST /leads/list`, `POST /leads/:id/update` and `POST /leads/:id/delete`. New frontend code uses the REST routes above.
 
 ## Database functions and pagination
 
@@ -78,9 +130,27 @@ These are public demo accounts. The seeder never resets an existing password; if
 
 ## Verification
 
-- `npm run build:frontend`: production compilation and route validation.
-- `npm run lint --prefix frontend`: Next.js/React lint checks.
-- Manual acceptance: sign in, add a lead, search/filter/sort, open it, edit details, add notes, change each status and check dashboard counts; verify CRM users cannot delete and admins can confirm/cancel deletion.
+Automated/static checks:
+
+```bash
+npm run lint --prefix frontend
+npm run build:frontend
+```
+
+Manual assignment workflow:
+
+1. Sign in as the admin demo account.
+2. Add a uniquely named lead with name, phone, valid email, budget, location, property type and source.
+3. Confirm the lead appears in the listing.
+4. Search by the lead name and phone.
+5. Filter by the lead source and status.
+6. Sort by created date and budget.
+7. Open the lead detail page and verify every field.
+8. Add a note from the update page and verify it appears on the detail page.
+9. Change the status to `Contacted`, `Site Visit` or `Closed`, then verify it persists.
+10. Confirm the dashboard totals and distributions reflect the database.
+11. Delete only the test lead and confirm it no longer loads.
+12. Sign in as the CRM demo account and verify admin-only actions such as user management and lead deletion are blocked.
 
 ## Existing installations and security
 

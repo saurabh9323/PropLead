@@ -52,7 +52,7 @@ export default async function LoginPage({ searchParams }) {
             <LoginShowcase />
           </div>
 
-          <p className="mt-auto pt-4 text-sm text-white/50 [@media(max-height:760px)]:hidden">© 2026 PropLead CRM. All rights reserved.</p>
+          <p className="mt-auto pt-4 text-sm text-white/50 [@media(max-height:760px)]:hidden">2026 PropLead CRM. All rights reserved.</p>
         </div>
       </section>
 

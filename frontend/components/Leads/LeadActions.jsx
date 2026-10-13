@@ -1,16 +1,28 @@
 "use client";
 
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import Swal from "sweetalert2";
 import { apiRequest } from "@/utils/apiRequest";
 
+const baseButtonClass =
+  "group relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:opacity-50";
+
+function Tooltip({ label }) {
+  return (
+    <span className="pointer-events-none absolute -top-9 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-950 px-2.5 py-1 text-xs font-semibold text-white shadow-lg group-hover:block group-focus-visible:block">
+      {label}
+    </span>
+  );
+}
+
 export default function LeadActions({ lead, canDelete, onDeleted, disabled = false }) {
-  const menu = useRef(null);
   const [deleting, setDeleting] = useState(false);
+
   async function remove() {
     if (deleting || disabled) return;
-    menu.current?.removeAttribute("open");
+
     const confirmation = await Swal.fire({
       title: "Delete lead?",
       text: `Delete ${lead.name} and all associated notes? This cannot be undone.`,
@@ -21,14 +33,19 @@ export default function LeadActions({ lead, canDelete, onDeleted, disabled = fal
       confirmButtonColor: "#be123c",
       focusCancel: true,
     });
+
     if (!confirmation.isConfirmed) return;
+
     setDeleting(true);
+
     try {
-      const result = await apiRequest("Leads", "post", {}, {}, `/${lead.id}/delete`);
+      const result = await apiRequest("Leads", "delete", undefined, {}, `/${lead.id}`);
+
       if (!result.ok) {
         await Swal.fire({ title: "Unable to delete", text: result.message, icon: "error" });
         return;
       }
+
       onDeleted();
       await Swal.fire({ title: "Lead deleted", text: result.message, icon: "success" });
     } catch {
@@ -37,16 +54,44 @@ export default function LeadActions({ lead, canDelete, onDeleted, disabled = fal
       setDeleting(false);
     }
   }
+
   return (
-    <details ref={menu} className="min-w-28 text-sm">
-      <summary className="cursor-pointer rounded-lg border border-slate-300 px-3 py-2 font-semibold text-slate-700" aria-label={`Actions for ${lead.name}`}>
-        {deleting ? "Deleting…" : "Actions"}
-      </summary>
-      <div className="mt-2 flex flex-col gap-1 rounded-lg border border-slate-200 bg-white p-1">
-        <Link href={`/leads/${lead.id}`} prefetch={false} className="rounded px-3 py-2 text-emerald-900 hover:bg-emerald-50">View</Link>
-        <Link href={`/leads/${lead.id}/edit`} prefetch={false} className="rounded px-3 py-2 text-emerald-900 hover:bg-emerald-50">Update</Link>
-        {canDelete && <button type="button" disabled={deleting || disabled} onClick={remove} className="rounded px-3 py-2 text-left text-rose-700 hover:bg-rose-50 disabled:opacity-50">Delete</button>}
-      </div>
-    </details>
+    <div className="flex items-center gap-2" aria-label={`Actions for ${lead.name}`}>
+      <Link
+        aria-label={`View ${lead.name}`}
+        className={baseButtonClass}
+        href={`/leads/${lead.id}`}
+        prefetch={false}
+        title="View lead"
+      >
+        <Eye size={17} />
+        <Tooltip label="View" />
+      </Link>
+
+      <Link
+        aria-label={`Edit ${lead.name}`}
+        className={baseButtonClass}
+        href={`/leads/${lead.id}/edit`}
+        prefetch={false}
+        title="Edit lead"
+      >
+        <Pencil size={17} />
+        <Tooltip label="Edit" />
+      </Link>
+
+      {canDelete ? (
+        <button
+          aria-label={`Delete ${lead.name}`}
+          className={`${baseButtonClass} hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-rose-600`}
+          disabled={deleting || disabled}
+          onClick={remove}
+          title="Delete lead"
+          type="button"
+        >
+          <Trash2 size={17} />
+          <Tooltip label={deleting ? "Deleting..." : "Delete"} />
+        </button>
+      ) : null}
+    </div>
   );
 }

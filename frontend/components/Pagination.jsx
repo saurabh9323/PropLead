@@ -49,8 +49,8 @@ export default function Pagination({ pagination, label = "leads", onNavigate, lo
         </label>
         <p role="status">
           {pending
-            ? "Loading…"
-            : `Showing ${total ? (page - 1) * pageSize + 1 : 0}–${Math.min(page * pageSize, total)} of ${total} ${label}`}
+            ? "Loading..."
+            : `Showing ${total ? (page - 1) * pageSize + 1 : 0}-${Math.min(page * pageSize, total)} of ${total} ${label}`}
         </p>
       </div>
       <div className="flex items-center gap-3">

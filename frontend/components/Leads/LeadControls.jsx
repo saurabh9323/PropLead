@@ -44,7 +44,7 @@ export function StatusForm({ lead }) {
         </select>
       </label>
       <button disabled={pending} className={buttonClass}>
-        {pending ? "Updating…" : "Update status"}
+        {pending ? "Updating..." : "Update status"}
       </button>
     </form>
   );
@@ -65,13 +65,13 @@ export function NoteForm({ id }) {
           rows={3}
           required
           maxLength={5000}
-          placeholder="Record a conversation, follow-up or site visit…"
+          placeholder="Record a conversation, follow-up or site visit..."
           className={inputClass}
           disabled={pending}
         />
       </label>
       <button disabled={pending} className={buttonClass}>
-        {pending ? "Adding…" : "Add note"}
+        {pending ? "Adding..." : "Add note"}
       </button>
     </form>
   );
@@ -80,12 +80,24 @@ export function NoteForm({ id }) {
 export function DeleteLead({ id }) {
   const [confirming, setConfirming] = useState(false);
   const router = useRouter();
-  const [state, submit, pending] = useLeadMutation(id, "delete", () => router.push("/leads?deleted=1"));
+  const [state, setState] = useState({});
+  const [pending, setPending] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (pending) return;
+    setPending(true);
+    const result = await apiRequest("Leads", "delete", undefined, {}, `/${id}`);
+    setState(result.ok ? { success: result.message } : { error: result.message });
+    if (result.ok) router.push("/leads?deleted=1");
+    setPending(false);
+  }
+
   return (
     <div className="mt-6 border-t border-rose-100 pt-5">
       <Feedback state={state} />
       {confirming ? (
-        <form onSubmit={(event) => submit(event, {})} className="space-y-3">
+        <form onSubmit={submit} className="space-y-3">
           <p className="text-sm text-rose-800">
             Delete this lead and all its notes? This cannot be undone.
           </p>
@@ -94,7 +106,7 @@ export function DeleteLead({ id }) {
               disabled={pending}
               className="rounded-lg bg-rose-700 px-4 py-2 font-semibold text-white disabled:opacity-50"
             >
-              {pending ? "Deleting…" : "Delete permanently"}
+              {pending ? "Deleting..." : "Delete permanently"}
             </button>
             <button
               type="button"

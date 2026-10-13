@@ -35,7 +35,7 @@ function SubmitButton({ pending }) {
       {pending ? (
         <>
           <Loader2 className="animate-spin" size={18} />
-          Signing in…
+          Signing in...
         </>
       ) : (
         "Sign in"

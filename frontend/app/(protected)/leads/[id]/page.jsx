@@ -31,7 +31,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
   }
   const info = [
     ["Phone", lead.phone],
-    ["Email", lead.email || "—"],
+    ["Email", lead.email || "-"],
     [
       "Budget",
       new Intl.NumberFormat("en-IN", {
@@ -48,7 +48,7 @@ export default async function LeadDetailPage({ params, searchParams }) {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <Link href="/leads" className="text-sm font-semibold text-emerald-800">
-        ← Back to leads
+        Back to leads
       </Link>
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div>

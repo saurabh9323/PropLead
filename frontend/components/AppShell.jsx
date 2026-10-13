@@ -126,7 +126,7 @@ export default function AppShell({ user, children }) {
   );
 
   return (
-    <main className="min-h-screen bg-[#f5f7f4] text-slate-950 lg:flex">
+    <main className="min-h-screen overflow-x-hidden bg-[#f5f7f4] text-slate-950 lg:flex">
       <aside className="hidden bg-[#12352f] text-white lg:fixed lg:inset-y-0 lg:left-0 lg:flex lg:w-80 lg:flex-col">
         {sidebarContent}
       </aside>
@@ -155,7 +155,7 @@ export default function AppShell({ user, children }) {
         </div>
       ) : null}
 
-      <section className="min-h-screen flex-1 lg:pl-80">
+      <section className="min-w-0 flex-1 lg:min-h-screen lg:pl-80">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5 lg:mx-6 lg:mt-4 lg:rounded-md lg:border lg:py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex min-w-0 items-center gap-3">
@@ -184,7 +184,7 @@ export default function AppShell({ user, children }) {
           </div>
         </header>
 
-        <div className="px-4 py-5 sm:px-5 lg:px-10">{children}</div>
+        <div className="min-w-0 px-4 py-5 sm:px-5 lg:px-10">{children}</div>
       </section>
     </main>
   );

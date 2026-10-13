@@ -15,7 +15,7 @@ const app = express();
 
 app.use(express.json({ limit: "100kb" }));
 app.use((req, res, next) => {
-  if (req.method === "POST" && (!req.is("application/json") || !req.body || Array.isArray(req.body) || typeof req.body !== "object")) {
+  if (["POST", "PUT"].includes(req.method) && (!req.is("application/json") || !req.body || Array.isArray(req.body) || typeof req.body !== "object")) {
     return handleControllerError(res, new AppError("Send an application/json object body", 400));
   }
   next();

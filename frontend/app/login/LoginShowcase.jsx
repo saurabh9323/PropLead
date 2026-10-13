@@ -12,8 +12,8 @@ const stages = [
     title: "Every enquiry in one place",
     text: "New leads arrive with their source, budget and property type, ready to assign.",
     rows: [
-      { name: "Aarav Mehta", detail: "Apartment, Pune", budget: "₹61L" },
-      { name: "Neha Kapoor", detail: "Villa, Noida", budget: "₹1.2Cr" },
+      { name: "Aarav Mehta", detail: "Apartment, Pune", budget: "Rs 61L" },
+      { name: "Neha Kapoor", detail: "Villa, Noida", budget: "Rs 1.2Cr" },
     ],
   },
   {
@@ -23,8 +23,8 @@ const stages = [
     title: "Nothing slips through",
     text: "See who has been contacted and who is still waiting for a call back.",
     rows: [
-      { name: "Rohan Verma", detail: "Call back today", budget: "₹52L" },
-      { name: "Isha Nair", detail: "Waiting for documents", budget: "₹43L" },
+      { name: "Rohan Verma", detail: "Call back today", budget: "Rs 52L" },
+      { name: "Isha Nair", detail: "Waiting for documents", budget: "Rs 43L" },
     ],
   },
   {
@@ -34,8 +34,8 @@ const stages = [
     title: "Visits, scheduled and tracked",
     text: "Know which buyers are visiting a property this week and which ones are next.",
     rows: [
-      { name: "Kabir Shah", detail: "Visit on Saturday", budget: "₹78L" },
-      { name: "Meera Iyer", detail: "Visit on Sunday", budget: "₹95L" },
+      { name: "Kabir Shah", detail: "Visit on Saturday", budget: "Rs 78L" },
+      { name: "Meera Iyer", detail: "Visit on Sunday", budget: "Rs 95L" },
     ],
   },
   {
@@ -45,8 +45,8 @@ const stages = [
     title: "See what is actually closing",
     text: "Follow conversion from first enquiry to signed deal, stage by stage.",
     rows: [
-      { name: "Dev Malhotra", detail: "Deal closed", budget: "₹66L" },
-      { name: "Anaya Rao", detail: "Deal closed", budget: "₹1.4Cr" },
+      { name: "Dev Malhotra", detail: "Deal closed", budget: "Rs 66L" },
+      { name: "Anaya Rao", detail: "Deal closed", budget: "Rs 1.4Cr" },
     ],
   },
 ];

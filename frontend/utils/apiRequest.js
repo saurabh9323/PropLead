@@ -2,7 +2,7 @@ import axios from "axios";
 import { apiurls, browserApiUrls } from "@/api/MainApi";
 import { emptyApiResponse } from "@/lib/Types/ApiResponse";
 
-const methodsWithBody = ["post"];
+const methodsWithBody = ["post", "put"];
 
 function removeEmptyQueryValues(data) {
   if (!data) return undefined;
@@ -23,7 +23,7 @@ export async function apiRequest(key, method, data, headers = {}, path = "", opt
   const requestMethod = method.toLowerCase();
   const finalHeaders = {
     Accept: "application/json",
-    ...(requestMethod === "post" ? { "Content-Type": "application/json" } : {}),
+    ...(methodsWithBody.includes(requestMethod) ? { "Content-Type": "application/json" } : {}),
     ...headers,
   };
 

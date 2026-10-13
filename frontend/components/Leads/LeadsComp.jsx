@@ -242,10 +242,19 @@ function ContactInfo({ lead }) {
 
 function LeadsTable({ leads, canDelete, onDeleted, loading }) {
   return (
-    <section className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white">
+    <section className="mt-3 max-w-full overflow-hidden rounded-xl border border-slate-200 bg-white">
       {/* Tablet and desktop: table */}
-      <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full text-left text-sm">
+      <div className="hidden max-w-full overflow-x-auto md:block">
+        <table className="w-full table-fixed text-left text-sm">
+          <colgroup>
+            <col className="w-[20%]" />
+            <col className="w-[22%]" />
+            <col className="w-[12%]" />
+            <col className="w-[12%]" />
+            <col className="w-[10%]" />
+            <col className="w-[10%]" />
+            <col className="w-[14%]" />
+          </colgroup>
           <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
             <tr>
               <th className="px-5 py-3 font-semibold">Lead</th>
@@ -263,7 +272,7 @@ function LeadsTable({ leads, canDelete, onDeleted, loading }) {
                 className="transition-colors hover:bg-emerald-50/50"
                 key={lead.id}
               >
-                <td className="px-5 py-3.5">
+                <td className="min-w-0 px-5 py-3.5">
                   <div className="flex items-center gap-3">
                     <Avatar name={lead.name} />
                     <div className="min-w-0">
@@ -279,20 +288,20 @@ function LeadsTable({ leads, canDelete, onDeleted, loading }) {
                     </div>
                   </div>
                 </td>
-                <td className="max-w-[240px] px-5 py-3.5">
+                <td className="min-w-0 px-5 py-3.5">
                   <ContactInfo lead={lead} />
                 </td>
                 <td className="whitespace-nowrap px-5 py-3.5 text-right font-semibold tabular-nums text-slate-900">
                   {formatBudget(lead.budget)}
                 </td>
-                <td className="px-5 py-3.5 text-slate-700">
+                <td className="min-w-0 px-5 py-3.5 text-slate-700">
                   <span className="flex items-center gap-1.5">
                     <MapPin className="shrink-0 text-slate-400" size={14} />
-                    {lead.location || "-"}
+                    <span className="truncate">{lead.location || "-"}</span>
                   </span>
                 </td>
-                <td className="px-5 py-3.5 text-slate-700">
-                  {lead.source || "-"}
+                <td className="min-w-0 px-5 py-3.5 text-slate-700">
+                  <span className="block truncate">{lead.source || "-"}</span>
                 </td>
                 <td className="px-5 py-3.5">
                   <StatusBadge status={lead.status} />
@@ -376,8 +385,8 @@ export default function LeadsComp({ canDelete = false }) {
       if (controller.signal.aborted) return;
       setLoading(true);
       try {
-        const body = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ""));
-        const response = await apiRequest("Leads", "post", body, {}, "/list", { signal: controller.signal });
+        const params = Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ""));
+        const response = await apiRequest("Leads", "get", params, {}, "", { signal: controller.signal });
         if (controller.signal.aborted) return;
         setResult({ data: response.data || [], pagination: response.pagination, error: response.ok ? null : response.message });
         setLoading(false);
@@ -387,7 +396,7 @@ export default function LeadsComp({ canDelete = false }) {
     return () => controller.abort();
   }, [filters, reloadKey]);
   return (
-    <div className="mx-auto w-full max-w-[1600px]">
+    <div className="mx-auto w-full max-w-[1600px] min-w-0">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
           <p className="text-sm font-medium text-emerald-800">Leads</p>
@@ -413,7 +422,7 @@ export default function LeadsComp({ canDelete = false }) {
 
       <StatusTabs filters={filters} navigate={navigate} />
       <FilterForm filters={filters} navigate={navigate} />
-      {loading && <p role="status" className="mt-4 text-sm text-emerald-800">Loading leads…</p>}
+      {loading && <p role="status" className="mt-4 text-sm text-emerald-800">Loading leads...</p>}
 
       {error ? (
         <section

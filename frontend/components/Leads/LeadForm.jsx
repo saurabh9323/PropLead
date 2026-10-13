@@ -31,7 +31,13 @@ export default function LeadForm({ lead }) {
     event.preventDefault();
     if (pending) return;
     setPending(true);
-    const result = await apiRequest("Leads", "post", values, {}, lead ? `/${lead.id}/update` : "");
+    const result = await apiRequest(
+      "Leads",
+      lead ? "put" : "post",
+      values,
+      {},
+      lead ? `/${lead.id}` : "",
+    );
     if (result.ok) { router.push(`/leads/${result.data.id}?saved=1`); router.refresh(); }
     else setState({ error: result.message });
     setPending(false);
@@ -64,7 +70,7 @@ export default function LeadForm({ lead }) {
     },
     {
       name: "budget",
-      label: "Budget (₹)",
+      label: "Budget (INR)",
       type: "number",
       min: "0",
       max: "9999999999.99",
@@ -131,7 +137,7 @@ export default function LeadForm({ lead }) {
           Cancel
         </Link>
         <button disabled={pending} className={buttonClass}>
-          {pending ? "Saving…" : lead ? "Save changes" : "Create lead"}
+          {pending ? "Saving..." : lead ? "Save changes" : "Create lead"}
         </button>
       </div>
     </form>

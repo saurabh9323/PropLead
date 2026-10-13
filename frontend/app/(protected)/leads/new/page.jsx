@@ -7,7 +7,7 @@ export default async function NewLeadPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <Link href="/leads" className="text-sm font-semibold text-emerald-800">
-        ← Back to leads
+        Back to leads
       </Link>
       <h1 className="mt-4 text-3xl font-bold">Add lead</h1>
       <p className="mt-2 text-slate-500">

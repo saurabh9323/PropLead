@@ -12,7 +12,7 @@ export default async function EditLeadPage({ params }) {
         href={`/leads/${id}`}
         className="text-sm font-semibold text-emerald-800"
       >
-        ← Back to lead
+        Back to lead
       </Link>
       <h1 className="mt-4 text-3xl font-bold">Update lead</h1>
       {error ? (

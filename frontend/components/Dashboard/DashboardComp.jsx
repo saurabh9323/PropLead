@@ -60,7 +60,7 @@ const currencyFormatter = new Intl.NumberFormat("en-IN", {
   maximumFractionDigits: 0,
 });
 
-// Short form (₹1.2Cr, ₹45L) so big budgets never overflow small cards.
+// Short form (Rs 1.2Cr, Rs 45L) so big budgets never overflow small cards.
 const compactCurrencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
   currency: "INR",
@@ -77,32 +77,36 @@ function getStatusCount(statusDistribution, status) {
 
 function StatCard({ label, value, helper, icon: Icon, tone = "slate" }) {
   const tones = {
-    slate: "bg-slate-100 text-slate-700",
-    blue: "bg-blue-50 text-blue-700",
-    amber: "bg-amber-50 text-amber-700",
-    violet: "bg-violet-50 text-violet-700",
-    green: "bg-emerald-50 text-emerald-700",
+    slate: "bg-slate-100 text-slate-700 ring-slate-200",
+    blue: "bg-blue-50 text-blue-700 ring-blue-100",
+    amber: "bg-amber-50 text-amber-700 ring-amber-100",
+    violet: "bg-violet-50 text-violet-700 ring-violet-100",
+    green: "bg-emerald-50 text-emerald-700 ring-emerald-100",
   };
 
   return (
-    <section className="min-w-0 rounded-xl border border-emerald-100 bg-white p-4 sm:p-5">
-      <div
-        className={`grid h-10 w-10 place-items-center rounded-lg ${tones[tone]}`}
-      >
-        <Icon size={20} />
+    <section className="min-w-0 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold uppercase tracking-wide text-slate-500">{label}</p>
+          <p className="mt-3 whitespace-nowrap text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-xl ring-1 ring-inset ${tones[tone]}`}
+        >
+          <Icon size={21} />
+        </div>
       </div>
-      <p className="mt-4 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-        {value}
-      </p>
-      <p className="mt-1 text-sm font-semibold text-slate-800">{label}</p>
-      <p className="mt-0.5 text-xs text-slate-500">{helper}</p>
+      <p className="mt-4 text-sm font-medium leading-5 text-slate-500">{helper}</p>
     </section>
   );
 }
 
 function MiniMetric({ label, value, fullValue, helper, icon: Icon }) {
   return (
-    <section className="flex min-w-0 items-center gap-4 rounded-xl border border-emerald-100 bg-white p-4 sm:p-5">
+    <section className="flex min-w-0 items-center gap-4 rounded-2xl border border-emerald-100 bg-white p-4 shadow-sm sm:p-5">
       <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-[#12352f] text-emerald-100">
         <Icon size={22} />
       </div>
@@ -135,13 +139,13 @@ function PipelineHero({
   );
 
   return (
-    <section className="mt-6 overflow-hidden rounded-2xl bg-[#12352f] text-white">
-      <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1fr_1.2fr] lg:gap-12">
+    <section className="mt-6 overflow-hidden rounded-3xl bg-[#12352f] text-white shadow-lg">
+      <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1fr_1.15fr] lg:gap-12">
         <div className="min-w-0">
           <p className="text-sm font-medium text-emerald-200">
             Conversion rate
           </p>
-          <p className="mt-2 text-5xl font-black tracking-tight sm:text-6xl">
+          <p className="mt-2 break-words text-5xl font-black tracking-tight sm:text-6xl">
             {formatPercent(conversionRate)}
           </p>
           <p className="mt-2 max-w-sm text-sm leading-6 text-emerald-100/80">
@@ -357,7 +361,9 @@ export default async function DashboardComp({ searchParams = {} }) {
             workspace.
           </p>
         </div>
-        <SyncButton />
+        <div className="self-start md:self-end">
+          <SyncButton />
+        </div>
       </header>
 
       {error ? (
@@ -377,15 +383,13 @@ export default async function DashboardComp({ searchParams = {} }) {
             totalLeads={totalLeads}
           />
 
-          <section className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-5">
-            <div className="col-span-2 md:col-span-1">
-              <StatCard
-                helper="All saved leads"
-                icon={Users}
-                label="Total leads"
-                value={totalLeads}
-              />
-            </div>
+          <section className="mt-6 grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 2xl:grid-cols-5">
+            <StatCard
+              helper="All saved leads"
+              icon={Users}
+              label="Total leads"
+              value={totalLeads}
+            />
             <StatCard
               helper="Fresh entries"
               icon={Clock3}
@@ -394,14 +398,14 @@ export default async function DashboardComp({ searchParams = {} }) {
               value={newLeads}
             />
             <StatCard
-              helper="In follow-up"
+              helper="Follow-up stage"
               icon={CalendarDays}
               label="Contacted"
               tone="amber"
               value={contactedLeads}
             />
             <StatCard
-              helper="Visits scheduled"
+              helper="Scheduled visits"
               icon={Building2}
               label="Site visits"
               tone="violet"

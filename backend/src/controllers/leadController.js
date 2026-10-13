@@ -13,7 +13,8 @@ const createLead = async (req, res) => {
 
 const getAllLeads = async (req, res) => {
   try {
-    const leads = await leadService.getAllLeads(req.body);
+    const queryParams = req.method === "GET" ? req.query : req.body;
+    const leads = await leadService.getAllLeads(queryParams);
 
     res.status(200).json(leads);
   } catch (error) {

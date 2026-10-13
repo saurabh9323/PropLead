@@ -21,7 +21,7 @@ function isActive(user) {
 }
 
 const inputClass =
-  "mt-1.5 w-full rounded-md border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400";
+  "mt-1.5 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400";
 
 /* ---------- icons ---------- */
 
@@ -94,7 +94,7 @@ function RowMenu({ user }) {
         aria-haspopup="menu"
         aria-expanded={Boolean(pos)}
         aria-label={`Actions for ${user.name}`}
-        className="rounded-md p-1.5 text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+        className="rounded-lg p-1.5 text-slate-600 transition hover:bg-emerald-50 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
       >
         <Kebab />
       </button>
@@ -106,12 +106,12 @@ function RowMenu({ user }) {
           <div
             role="menu"
             style={{ right: pos.right, top: pos.top, bottom: pos.bottom }}
-            className="fixed z-50 w-44 overflow-hidden rounded-md border border-slate-200 bg-white py-1 text-left text-sm shadow-lg"
+            className="fixed z-50 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 text-left text-sm shadow-lg"
           >
-            <button role="menuitem" type="button" onClick={() => copy(user.email, "Email")} className="block w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-50">
+            <button role="menuitem" type="button" onClick={() => copy(user.email, "Email")} className="block w-full px-3 py-2 text-left text-slate-700 hover:bg-emerald-50 hover:text-emerald-800">
               Copy email
             </button>
-            <button role="menuitem" type="button" onClick={() => copy(user.id, "User ID")} className="block w-full px-3 py-2 text-left text-slate-700 hover:bg-slate-50">
+            <button role="menuitem" type="button" onClick={() => copy(user.id, "User ID")} className="block w-full px-3 py-2 text-left text-slate-700 hover:bg-emerald-50 hover:text-emerald-800">
               Copy user ID
             </button>
           </div>
@@ -141,7 +141,11 @@ function ListView({ users, error, onNew }) {
 
   return (
     <>
-      <h2 className="text-2xl font-semibold text-slate-900">User Master</h2>
+      <div>
+        <p className="text-sm font-semibold text-emerald-800">Admin workspace</p>
+        <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">User Master</h2>
+        <p className="mt-1 text-sm text-slate-500">Create users and assign their CRM access role.</p>
+      </div>
 
       <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input
@@ -153,12 +157,12 @@ function ListView({ users, error, onNew }) {
           }}
           placeholder="Search..."
           aria-label="Search users"
-          className="w-full rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-blue-500 focus:bg-white focus:ring-2 focus:ring-blue-100 sm:max-w-md"
+          className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-500 outline-none transition focus:border-emerald-600 focus:bg-white focus:ring-2 focus:ring-emerald-100 sm:max-w-md"
         />
         <button
           type="button"
           onClick={onNew}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#12352f] px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600"
         >
           New
           <PlusCircle />
@@ -166,16 +170,16 @@ function ListView({ users, error, onNew }) {
       </div>
 
       {error ? (
-        <div role="alert" className="mt-6 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+        <div role="alert" className="mt-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
           <p className="font-semibold">Users could not be loaded</p>
           <p className="mt-1">{error}</p>
         </div>
       ) : (
         <>
-          <div className="mt-6 overflow-x-auto">
+          <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200 bg-white">
             <table className="min-w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-600">
+                <tr className="border-b border-slate-200 bg-emerald-50/60 text-slate-600">
                   <th scope="col" className="px-4 py-3.5 font-medium">Name</th>
                   <th scope="col" className="px-4 py-3.5 font-medium">Email</th>
                   <th scope="col" className="px-4 py-3.5 font-medium">Role</th>
@@ -188,7 +192,7 @@ function ListView({ users, error, onNew }) {
                 {rows.map((user) => {
                   const active = isActive(user);
                   return (
-                    <tr key={user.id} className="hover:bg-slate-50/70">
+                    <tr key={user.id} className="hover:bg-emerald-50/40">
                       <td className="px-4 py-4 font-medium text-slate-900">{user.name}</td>
                       <td className="px-4 py-4 text-slate-700">{user.email}</td>
                       <td className="px-4 py-4 capitalize text-slate-700">{user.role || "-"}</td>
@@ -199,7 +203,7 @@ function ListView({ users, error, onNew }) {
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset ${
                             active
-                              ? "bg-green-50 text-green-700 ring-green-300"
+                              ? "bg-emerald-50 text-emerald-700 ring-emerald-300"
                               : "bg-slate-100 text-slate-600 ring-slate-300"
                           }`}
                         >
@@ -237,7 +241,7 @@ function ListView({ users, error, onNew }) {
                   type="button"
                   onClick={() => setPage(current - 1)}
                   disabled={current === 1}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Previous
                 </button>
@@ -245,7 +249,7 @@ function ListView({ users, error, onNew }) {
                   type="button"
                   onClick={() => setPage(current + 1)}
                   disabled={current === pageCount}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 font-medium hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Next
                 </button>
@@ -282,7 +286,7 @@ function AddView({ roles, rolesError, onCancel }) {
       <button
         type="button"
         onClick={onCancel}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-emerald-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-600"
       >
         <ArrowLeft />
         Back to users
@@ -332,14 +336,14 @@ function AddView({ roles, rolesError, onCancel }) {
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+          className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-emerald-50"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={disabled}
-            className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:bg-slate-300"
+            className="rounded-lg bg-[#12352f] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             Create user
           </button>
@@ -355,7 +359,7 @@ export default function UserMasterClient({ users, roles, usersError, rolesError,
   const [view, setView] = useState(startInAdd ? "add" : "list");
 
   return (
-    <section className="rounded-lg bg-white p-5 shadow-sm sm:p-6">
+    <section className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm sm:p-6">
       {view === "add" ? (
         <AddView roles={roles} rolesError={rolesError} onCancel={() => setView("list")} />
       ) : (
