@@ -6,14 +6,18 @@ const errorResponse = (statusCode, message) => NextResponse.json(
   { ok: false, statusCode, message, data: null, pagination: null },
   { status: statusCode },
 );
-const readable = /^(health|auth\/me|dashboard|roles|users(?:\/[^/]+)?|leads(?:\/[^/]+(?:\/notes)?)?)$/;
-const postable = /^(auth\/(login|logout)|users|leads(?:\/list|\/[^/]+\/(update|delete|status|notes))?)$/;
+const readableRoutes = new Set(["health", "auth/me", "dashboard", "roles", "users", "leads"]);
+const postableRoutes = new Set(["auth/login", "auth/logout", "users", "leads", "leads/list"]);
 const puttable = /^leads\/[^/]+$/;
 const deletable = /^leads\/[^/]+$/;
+const userDetail = /^users\/[^/]+$/;
+const leadDetail = /^leads\/[^/]+$/;
+const leadNotes = /^leads\/[^/]+\/notes$/;
+const leadActions = /^leads\/[^/]+\/(update|delete|status|notes)$/;
 
 function isAllowedMethod(method, endpoint) {
-  if (method === "GET") return readable.test(endpoint);
-  if (method === "POST") return postable.test(endpoint);
+  if (method === "GET") return readableRoutes.has(endpoint) || userDetail.test(endpoint) || leadDetail.test(endpoint) || leadNotes.test(endpoint);
+  if (method === "POST") return postableRoutes.has(endpoint) || leadActions.test(endpoint);
   if (method === "PUT") return puttable.test(endpoint);
   if (method === "DELETE") return deletable.test(endpoint);
   return false;
@@ -21,7 +25,7 @@ function isAllowedMethod(method, endpoint) {
 
 async function forward(request, context) {
   const { path } = await context.params;
-  const endpoint = path.join("/");
+  const endpoint = path.join("/").replace(/^\/+|\/+$/g, "");
   const method = request.method;
   const hasBody = ["POST", "PUT"].includes(method);
   if (!isAllowedMethod(method, endpoint)) return errorResponse(404, "Endpoint not found");
