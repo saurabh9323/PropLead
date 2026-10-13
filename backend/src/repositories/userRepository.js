@@ -12,6 +12,14 @@ module.exports = {
       user.passwordHash,
       user.roleId,
     ], 201),
+  updateUser: (id, user) =>
+    callResponse("crm_json_update_user", [
+      id,
+      user.name,
+      user.email,
+      user.roleId,
+    ]),
+  deleteUser: (id) => callResponse("crm_json_delete_user", [id]),
   seedUser: (name, email, hash, role) =>
     callValue("crm_json_seed_user", [name, email, hash, role]),
 };

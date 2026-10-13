@@ -24,6 +24,7 @@ function getProxyTarget(method, parts) {
   if (group === "users") {
     if (parts.length === 1 && ["GET", "POST"].includes(method)) return { key: "Users", suffix: "" };
     if (parts.length === 2 && method === "GET") return { key: "Users", suffix: `/${id}` };
+    if (parts.length === 2 && ["PUT", "DELETE"].includes(method)) return { key: "Users", suffix: `/${id}` };
   }
 
   if (group === "leads") {

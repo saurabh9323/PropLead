@@ -166,36 +166,7 @@ export default function AppShell({ user, children }) {
       <section className="min-w-0 flex-1 lg:min-h-screen lg:pl-80">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur sm:px-5 lg:mx-6 lg:mt-4 lg:rounded-md lg:border lg:py-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <button
-                aria-label="Open navigation"
-                className="rounded-md p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
-                onClick={() => setIsMobileNavOpen(true)}
-                type="button"
-              >
-                <Menu size={22} />
-              </button>
-              <form
-                className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-slate-700 transition-colors focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 sm:min-w-[260px] md:w-[340px] md:flex-none"
-                onSubmit={searchLeads}
-              >
-                <Search className="shrink-0 text-slate-500" size={18} />
-                <input
-                  aria-label="Search leads by name or phone"
-                  className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-500"
-                  onChange={(event) => setQuickSearch(event.target.value)}
-                  placeholder="Search leads"
-                  type="search"
-                  value={quickSearch}
-                />
-                <button
-                  className="shrink-0 rounded border border-emerald-200 bg-white px-2 py-0.5 text-xs font-semibold text-emerald-800 hover:border-emerald-500"
-                  type="submit"
-                >
-                  Go
-                </button>
-              </form>
-            </div>
+            
 
             <div className="flex items-center justify-between gap-3 md:justify-end">
               <div className="truncate rounded-md bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-700 sm:text-sm">

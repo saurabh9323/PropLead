@@ -161,6 +161,36 @@ LANGUAGE sql AS $$
   RETURNING id, name, email, role_id, created_at, updated_at;
 $$;
 
+CREATE OR REPLACE FUNCTION crm_update_user(p_id uuid, p_name text, p_email text, p_role_id uuid)
+RETURNS TABLE(id uuid, name text, email text, role text, created_at timestamptz, updated_at timestamptz)
+LANGUAGE sql AS $$
+  WITH updated AS (
+    UPDATE users
+    SET name = p_name,
+        email = LOWER(p_email),
+        role_id = p_role_id,
+        updated_at = NOW()
+    WHERE id = p_id
+    RETURNING id, name, email, role_id, created_at, updated_at
+  )
+  SELECT updated.id, updated.name, updated.email, roles.name, updated.created_at, updated.updated_at
+  FROM updated
+  JOIN roles ON roles.id = updated.role_id;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_delete_user(p_id uuid)
+RETURNS TABLE(id uuid, name text, email text, role text, created_at timestamptz, updated_at timestamptz)
+LANGUAGE sql AS $$
+  WITH deleted AS (
+    DELETE FROM users
+    WHERE id = p_id
+    RETURNING id, name, email, role_id, created_at, updated_at
+  )
+  SELECT deleted.id, deleted.name, deleted.email, roles.name, deleted.created_at, deleted.updated_at
+  FROM deleted
+  JOIN roles ON roles.id = deleted.role_id;
+$$;
+
 CREATE OR REPLACE FUNCTION crm_update_password(p_id uuid, p_hash text) RETURNS void
 LANGUAGE sql AS $$ UPDATE users SET password_hash = p_hash WHERE id = p_id; $$;
 
@@ -219,6 +249,18 @@ CREATE OR REPLACE FUNCTION crm_json_get_user(p_id uuid) RETURNS jsonb
 LANGUAGE sql AS $$
   SELECT jsonb_build_object('message', 'User retrieved successfully', 'data', to_jsonb(r))
   FROM crm_get_user(p_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_update_user(p_id uuid, p_name text, p_email text, p_role_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'User updated successfully', 'data', to_jsonb(r))
+  FROM crm_update_user(p_id, p_name, p_email, p_role_id) r;
+$$;
+
+CREATE OR REPLACE FUNCTION crm_json_delete_user(p_id uuid) RETURNS jsonb
+LANGUAGE sql AS $$
+  SELECT jsonb_build_object('message', 'User deleted successfully', 'data', to_jsonb(r))
+  FROM crm_delete_user(p_id) r;
 $$;
 
 CREATE OR REPLACE FUNCTION crm_json_profile(p_id uuid) RETURNS jsonb
