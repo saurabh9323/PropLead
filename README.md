@@ -128,6 +128,29 @@ Credentials are always visible and can be clicked to fill the form, as requested
 
 These are public demo accounts. The seeder never resets an existing password; if these emails already exist with different passwords, use their existing credentials or update them explicitly in your own database.
 
+## Deployment
+
+The repository is split into two apps. Deploy them as separate services:
+
+Backend on Render:
+
+- Root directory: `backend`
+- Build command: `npm ci`
+- Start command: `npm start`
+- Health check path: `/api/health`
+- Required environment variables: `DATABASE_URL`, `JWT_SECRET`
+
+The included `render.yaml` contains the same backend settings with secret values marked as `sync: false`, so credentials are entered in the Render dashboard rather than committed to Git. Do not use `npm`, `npm run`, or `npm run build` as the backend build command; the Express API has no build step, so Render only needs to install dependencies and start `server.js`.
+
+Frontend on Vercel:
+
+- Root directory: `frontend`
+- Build command: `npm run build`
+- Output: managed by Next.js
+- Required environment variable: `NEXT_PUBLIC_API_BASE_URL=https://your-render-service.onrender.com/api`
+
+After deployment, run `npm run db:setup --prefix backend` locally against the production database or execute `backend/sql/schema.sql` and `backend/sql/functions.sql` in Supabase before using the deployed API.
+
 ## Verification
 
 Automated/static checks:
