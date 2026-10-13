@@ -6,7 +6,6 @@ import { useState } from "react";
 import { apiRequest } from "@/utils/apiRequest";
 import {
   BarChart3,
-  ChevronRight,
   Home,
   LogOut,
   Menu,
@@ -34,6 +33,18 @@ export default function AppShell({ user, children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [quickSearch, setQuickSearch] = useState("");
+
+  function searchLeads(event) {
+    event.preventDefault();
+    const search = quickSearch.trim();
+    if (!search) {
+      router.push("/leads");
+      return;
+    }
+    router.push(`/leads?search=${encodeURIComponent(search)}`);
+  }
+
   async function logout(event) {
     event.preventDefault();
     if (loggingOut) return;
@@ -82,8 +93,8 @@ export default function AppShell({ user, children }) {
                   <Link
                     className={
                       isActive
-                        ? "flex items-center justify-between rounded-md bg-white px-3 py-2.5 text-sm font-bold text-[#0f766e] shadow-sm"
-                        : "flex items-center justify-between rounded-md px-3 py-2.5 text-sm font-semibold text-white/90 hover:bg-white/10"
+                        ? "flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-bold text-[#0f766e] shadow-sm"
+                        : "flex items-center rounded-md px-3 py-2.5 text-sm font-semibold text-white/90 hover:bg-white/10"
                     }
                     href={item.href}
                     key={item.label}
@@ -93,11 +104,8 @@ export default function AppShell({ user, children }) {
                     }}
                     prefetch
                   >
-                    <span className="flex min-w-0 items-center gap-3">
-                      <Icon className="shrink-0" size={19} />
-                      <span className="truncate">{item.label}</span>
-                    </span>
-                    <ChevronRight className="shrink-0" size={17} />
+                    <Icon className="mr-3 shrink-0" size={19} />
+                    <span className="truncate">{item.label}</span>
                   </Link>
                 );
               })}
@@ -167,10 +175,26 @@ export default function AppShell({ user, children }) {
               >
                 <Menu size={22} />
               </button>
-              <div className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-slate-500 sm:min-w-[260px] md:w-[340px] md:flex-none">
-                <Search size={18} />
-                <span className="truncate">Search leads</span>
-              </div>
+              <form
+                className="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50/50 px-3 py-2 text-sm text-slate-700 transition-colors focus-within:border-emerald-600 focus-within:bg-white focus-within:ring-2 focus-within:ring-emerald-100 sm:min-w-[260px] md:w-[340px] md:flex-none"
+                onSubmit={searchLeads}
+              >
+                <Search className="shrink-0 text-slate-500" size={18} />
+                <input
+                  aria-label="Search leads by name or phone"
+                  className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-slate-500"
+                  onChange={(event) => setQuickSearch(event.target.value)}
+                  placeholder="Search leads"
+                  type="search"
+                  value={quickSearch}
+                />
+                <button
+                  className="shrink-0 rounded border border-emerald-200 bg-white px-2 py-0.5 text-xs font-semibold text-emerald-800 hover:border-emerald-500"
+                  type="submit"
+                >
+                  Go
+                </button>
+              </form>
             </div>
 
             <div className="flex items-center justify-between gap-3 md:justify-end">

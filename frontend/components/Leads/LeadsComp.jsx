@@ -10,6 +10,7 @@ import { getPagination } from "@/lib/pagination";
 import { getStatusStyle } from "../Dashboard/statusStyles";
 
 const statusOptions = ["New", "Contacted", "Site Visit", "Closed"];
+const sourceOptions = ["Website", "Referral", "Walk-in", "Social Media", "Google", "Google Ads", "Facebook", "Instagram", "Other"];
 
 const currencyFormatter = new Intl.NumberFormat("en-IN", {
   style: "currency",
@@ -111,7 +112,7 @@ function StatusTabs({ filters, navigate }) {
   );
 }
 
-function FilterForm({ filters, navigate }) {
+function FilterForm({ filters, navigate, sources }) {
   const hasActiveFilters = Boolean(
     filters.search || filters.source || filters.status,
   );
@@ -156,12 +157,18 @@ function FilterForm({ filters, navigate }) {
           <span className="mb-1.5 block text-sm font-medium text-slate-700">
             Source
           </span>
-          <input
+          <select
             className={inputClass}
             defaultValue={filters.source}
             name="source"
-            placeholder="e.g. Website"
-          />
+          >
+            <option value="">All sources</option>
+            {sources.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="block">
@@ -371,6 +378,7 @@ export default function LeadsComp({ canDelete = false }) {
   const [result, setResult] = useState({ data: [], pagination: null, error: null });
   const [loading, setLoading] = useState(true);
   const { data: leads, pagination, error } = result;
+  const sources = Array.from(new Set([...sourceOptions, ...leads.map((lead) => lead.source).filter(Boolean)])).sort((a, b) => a.localeCompare(b));
   function navigate(next) {
     setFilters(getFilters(next));
   }
@@ -409,19 +417,14 @@ export default function LeadsComp({ canDelete = false }) {
         </div>
         <Link
           href="/leads/new"
-          className="rounded-lg bg-[#12352f] px-5 py-2.5 text-center font-semibold text-white hover:bg-emerald-900"
+          className="w-fit rounded-lg bg-[#12352f] px-5 py-2.5 text-center font-semibold text-white hover:bg-emerald-900"
         >
           Add lead
         </Link>
-        {!error ? (
-          <p className="w-fit rounded-full bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
-            {pagination?.total ?? leads.length} leads
-          </p>
-        ) : null}
       </header>
 
       <StatusTabs filters={filters} navigate={navigate} />
-      <FilterForm filters={filters} navigate={navigate} />
+      <FilterForm filters={filters} navigate={navigate} sources={sources} />
       {loading && <p role="status" className="mt-4 text-sm text-emerald-800">Loading leads...</p>}
 
       {error ? (

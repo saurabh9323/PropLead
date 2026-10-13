@@ -9,10 +9,10 @@ export default async function EditLeadPage({ params }) {
   return (
     <div className="mx-auto max-w-4xl">
       <Link
-        href={`/leads/${id}`}
+        href="/"
         className="text-sm font-semibold text-emerald-800"
       >
-        Back to lead
+        Back to dashboard
       </Link>
       <h1 className="mt-4 text-3xl font-bold">Update lead</h1>
       {error ? (
